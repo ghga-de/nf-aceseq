@@ -1,0 +1,2 @@
+sample,tumor,control
+withcontrol,seqc2_testdata_aceseq/WES_LL_T_1_test.bam,seqc2_testdata_aceseq/WES_LL_N_1_test.bam
