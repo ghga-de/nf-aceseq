@@ -2,43 +2,67 @@
 // Check input samplesheet and get read channels
 //
 
-include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
+params.options = [:]
+
+include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check' addParams( options: params.options )
 
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
 
     main:
-    SAMPLESHEET_CHECK ( samplesheet )
+    SAMPLESHEET_CHECK (samplesheet)
         .csv
         .splitCsv ( header:true, sep:',' )
-        .map { create_fastq_channel(it) }
-        .set { reads }
+        .map{ create_bam_channel(it) }
+        .set {ch_sample}
 
     emit:
-    reads                                     // channel: [ val(meta), [ reads ] ]
-    versions = SAMPLESHEET_CHECK.out.versions // channel: [ versions.yml ]
+    ch_sample // channel: [ val(meta), [tumor,tumor.bai],[ control, control.bai]]
+    versions = SAMPLESHEET_CHECK.out.versions
 }
 
-// Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
-def create_fastq_channel(LinkedHashMap row) {
-    // create meta map
+// Function to get list of [ sample, [ tumor], [control ] ]
+def create_bam_channel(LinkedHashMap row) {
+// create meta map
     def meta = [:]
-    meta.id         = row.sample
-    meta.single_end = row.single_end.toBoolean()
+    meta.id           = row.sample
+    meta.iscontrol    = row.iscontrol
 
     // add path(s) of the fastq file(s) to the meta map
-    def fastq_meta = []
-    if (!file(row.fastq_1).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
-    }
-    if (meta.single_end) {
-        fastq_meta = [ meta, [ file(row.fastq_1) ] ]
-    } else {
-        if (!file(row.fastq_2).exists()) {
-            exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
+    def bam_meta = []
+
+        if (!file(row.tumor).exists()) {
+            exit 1, "ERROR: Please check input samplesheet -> Tumor file does not exist!\n${row.tumor}"
         }
-        fastq_meta = [ meta, [ file(row.fastq_1), file(row.fastq_2) ] ]
-    }
-    return fastq_meta
+        if (row.iscontrol) {
+            if (!file(row.control).exists()) {
+                if (row.control == 'dummy') {
+                    bam_meta = [  meta, file(row.tumor), file(row.tumor + '.bai'), [],[]  ]
+                    meta.tumor_bam = file(row.tumor)
+                    meta.tumor_bai = file(row.tumor + '.bai')
+                    meta.control_bam = []
+                    meta.control_bai = []
+
+                }
+                else {
+                    exit 1, "ERROR: Please check input samplesheet -> Control file does not exist!\n${row.control}"
+                    }
+            }
+
+            bam_meta = [ meta, file(row.tumor), file(row.tumor + '.bai'), file(row.control), file(row.control + '.bai') ]
+            meta.tumor_bam = file(row.tumor)
+            meta.tumor_bai = file(row.tumor + '.bai')
+            meta.control_bam = file(row.control)
+            meta.control_bai = file(row.control + '.bai')
+
+        } else {
+            bam_meta = [  meta, file(row.tumor), file(row.tumor + '.bai'), [],[]  ]
+            meta.tumor_bam = file(row.tumor)
+            meta.tumor_bai = file(row.tumor + '.bai')
+            meta.control_bam = []
+            meta.control_bai = []
+        }
+    return bam_meta
 }
+
