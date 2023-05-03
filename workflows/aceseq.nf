@@ -29,10 +29,17 @@ else{
     ref_type = "hg37"
 }
 
-dbsnpsnv            =  params.dbsnp_snv      ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
-                                             : Channel.of([],[])                                        
-mapability          = params.mapability_file ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
-                                             : Channel.of([],[])
+
+dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
+                                                : Channel.of([],[])                                        
+mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
+                                                : Channel.of([],[])
+// Beagle references
+beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference + '/ALL.*.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.CHR.bref3', checkIfExists: true ).collect()                                   
+                                                : Channel.empty()
+beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map + '/plink.*.GRCh38.CHR.map', checkIfExists: true ).collect() 
+                                                : Channel.empty()    
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -124,23 +131,26 @@ workflow ACESEQ {
     //
     // SUBWORKFLOW: MPILEUP_SNV_CNV_CALL: Call SNVs
     //
-   MPILEUP_SNV_CNV_CALL(
+    MPILEUP_SNV_CNV_CALL(
         ch_sample, 
         ref, 
         chrlength,
         dbsnpsnv,
         mapability
     )
-    ch_versions = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
+    ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
 
+    ch_input_phase = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.ch_sample_g)
     //
     // SUBWORKFLOW: PHASING: Call mpileup and beagle
     //
-    //PHASING(
-    //    ch_sample, 
-    //    ref, 
-    //    interval_ch
-    //)
+    PHASING(
+        ch_input_phase, 
+        ref, 
+        chrlength,
+        beagle_ref,
+        beagle_map
+    )
 
     //
     // MODULE: CUSTOM_DUMPSOFTWAREVERSIONS
