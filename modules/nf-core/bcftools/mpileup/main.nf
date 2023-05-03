@@ -12,9 +12,9 @@ process BCFTOOLS_MPILEUP {
     tuple path(fasta), path(fai)
 
     output:
-    tuple val(meta),path("*.vcf")                , emit: vcf
+    tuple val(meta), path("*.unphased.vcf")      , emit: vcf
     tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
-    tuple val(meta), val(interval_name)          , emit: intervals 
+    tuple val(meta), val(intervals)              , emit: intervals 
     path  "versions.yml"                         , emit: versions
 
     when:
@@ -35,7 +35,7 @@ process BCFTOOLS_MPILEUP {
             $control \\
             | bcftools call $args2 - > ${prefix}.${intervals}.unphased.vcf
 
-        bcftools stats ${prefix}.${intervals}.vcf > ${prefix}.${intervals}.unphased.bcftools_stats.txt
+        bcftools stats ${prefix}.${intervals}.unphased.vcf > ${prefix}.${intervals}.unphased.bcftools_stats.txt
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -44,7 +44,7 @@ process BCFTOOLS_MPILEUP {
         """
     }
     else{
-         """
+        """
         touch ${prefix}.${intervals}.vcf
 
         touch ${prefix}.${intervals}.bcftools_stats.txt
