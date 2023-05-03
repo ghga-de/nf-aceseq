@@ -1,5 +1,5 @@
 //
-// SNVCALL: RUN SAMTOOLS MPILEUP by intervals
+// SNVCALL: RUN 
 //
 
 params.options = [:]
@@ -12,7 +12,7 @@ include { ANNOTATE_CNV     } from '../../modules/local/annotate_cnv.nf'         
 include { MERGE_CNV        } from '../../modules/local/merge_cnv.nf'               addParams( options: params.options )
 
 
-workflow MPILEUP_SNV_CNV_CALL {
+workflow GET_BREAKPOINTS_SEGMENTS {
     take:
     sample_ch     // channel: [val(meta), tumor,tumor_bai, control, control_bai, tumorname, controlname]
     ref           // channel: [path(fasta), path(fai)]
@@ -94,7 +94,6 @@ workflow MPILEUP_SNV_CNV_CALL {
     )
     versions  = versions.mix(MERGE_CNV.out.versions)
     all_cnv   = MERGE_CNV.out.cnv
-
     // combine cnvs according to meta
     WIN_GENERATOR
                 .out
@@ -110,13 +109,11 @@ workflow MPILEUP_SNV_CNV_CALL {
         chrlength
     )
     versions  = versions.mix(ESTIMATE_SEX.out.versions)
-    ch_sex      = ESTIMATE_SEX.out.sex
-    ch_sample_g = ESTIMATE_SEX.out.sample_g
+    ch_sex = ESTIMATE_SEX.out.sex
 
     emit:
     versions
     all_snp
     all_cnv
     ch_sex
-    ch_sample_g
 }
