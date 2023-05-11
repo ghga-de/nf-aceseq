@@ -12,10 +12,8 @@ process BCFTOOLS_MPILEUP {
     tuple path(fasta), path(fai)
 
     output:
-    tuple val(meta), path("*.unphased.vcf")      , emit: vcf
-    tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
-    tuple val(meta), val(intervals)              , emit: intervals 
-    path  "versions.yml"                         , emit: versions
+    tuple val(meta),val(intervals), path("*.unphased.vcf")  , emit: vcf
+    path  "versions.yml"                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,6 +22,7 @@ process BCFTOOLS_MPILEUP {
     def args     = task.ext.args ?: ''
     def args2    = task.ext.args2 ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
+    
     if (meta.iscontrol == '1') {
         """
         bcftools \\
@@ -35,8 +34,6 @@ process BCFTOOLS_MPILEUP {
             $control \\
             | bcftools call $args2 - > ${prefix}.${intervals}.unphased.vcf
 
-        bcftools stats ${prefix}.${intervals}.unphased.vcf > ${prefix}.${intervals}.unphased.bcftools_stats.txt
-
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
@@ -46,8 +43,6 @@ process BCFTOOLS_MPILEUP {
     else{
         """
         touch ${prefix}.${intervals}.vcf
-
-        touch ${prefix}.${intervals}.bcftools_stats.txt
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

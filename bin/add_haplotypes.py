@@ -55,12 +55,17 @@ for line in snpFile:
 	if chrom.startswith('chr'):
 		chrom = chrom.replace('chr', '')
 		line['chr'] = line['chr'].replace('chr', '')
+		x = chrom
+	else:
+		x = 'chr' + chrom
 	pos   = int( line['startPos'] )
 	line['haplotype'] = 0
 	
 	if chrom != curr_chrom:
 		try:
-			infile     = Tabfile.Input( open( "%s%s%s"% (args.inputpath, chrom, args.inputsuffix) ) )
+			print ( "%s%s%s"% (args.inputpath, x, args.inputsuffix))
+			infile     = Tabfile.Input( open( "%s%s%s"% (args.inputpath, x, args.inputsuffix) ) )
+			
 #			sample_col = [a for a in infile.header if a.startswith('sample')][0]			# name of column with sample information
 			sample_col = infile.header[len(infile.header)-1] #last column in vcf file 
 			gt_pos     = 0

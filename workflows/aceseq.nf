@@ -19,8 +19,11 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chr_prefix     = Channel.value(params.chr_prefix)
-chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+chrlength      = params.chrom_sizes           ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
+contigs        = params.contig_file           ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+rep_time       = params.replication_time_file ? Channel.fromPath(params.replication_time_file, checkIfExists: true) : Channel.empty() 
+gc_content     = params.gc_content_file       ? Channel.fromPath(params.gc_content_file, checkIfExists: true) : Channel.empty() 
+centromers     = params.centromer_file        ? Channel.fromPath(params.centromer_file, checkIfExists: true) : Channel.empty() 
 
 if (params.fasta.contains("38")){
     ref_type = "hg38"   
@@ -60,9 +63,12 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK          } from '../subworkflows/local/input_check'
-include { MPILEUP_SNV_CNV_CALL } from '../subworkflows/local/mpileup_snv_cnv_call'
-include { PHASING              } from '../subworkflows/local/phasing'
+include { INPUT_CHECK              } from '../subworkflows/local/input_check'
+include { MPILEUP_SNV_CNV_CALL     } from '../subworkflows/local/mpileup_snv_cnv_call'
+include { PHASING                  } from '../subworkflows/local/phasing'
+include { CORRECT_GC_BIAS          } from '../subworkflows/local/correct_gc_bias'
+include { GET_BREAKPOINTS_SEGMENTS } from '../subworkflows/local/get_breakpoints_segments'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -82,6 +88,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 
 include { GREP_SAMPLENAME   } from '../modules/local/grep_samplename.nf'
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
+include { CREATE_UNPHASED   } from '../modules/local/create_unphased.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,18 +146,60 @@ workflow ACESEQ {
         mapability
     )
     ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
+    ch_all_snp     = MPILEUP_SNV_CNV_CALL.out.all_snp
+    ch_sex_file    = MPILEUP_SNV_CNV_CALL.out.ch_sex
 
-    ch_input_phase = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.ch_sample_g)
+    //
+    // SUBWORKFLOW: CORRECT_GC_BIAS
+    //  
+    CORRECT_GC_BIAS(
+        MPILEUP_SNV_CNV_CALL.out.all_cnv,
+        rep_time,
+        chrlength,
+        gc_content
+    )
+    ch_corr_qual = CORRECT_GC_BIAS.out.qual_corrected
+    ch_corr_win  = CORRECT_GC_BIAS.out.windows_corrected
+    ch_versions  = ch_versions.mix(CORRECT_GC_BIAS.out.versions)
+
     //
     // SUBWORKFLOW: PHASING: Call mpileup and beagle
     //
+    ch_input_phase = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.ch_sex)
     PHASING(
-        ch_input_phase, 
+        ch_input_phase,
+        ch_all_snp, 
         ref, 
         chrlength,
         beagle_ref,
-        beagle_map
+        beagle_map,
+        dbsnpsnv
     )
+    ch_versions    = ch_versions.mix(PHASING.out.versions)
+    snp_pos_haplo  = PHASING.out.ch_snp_haplotypes
+
+    //
+    // SUBWORKFLOW: GET_BREAKPOINTS_SEGMENTS: 
+    //
+    GET_BREAKPOINTS_SEGMENTS(
+        ch_corr_win,
+        snp_pos_haplo,
+        ch_sex_file,
+        centromers
+    )
+
+    // WARN: this is probably needed for no-control samples!    
+    //
+    // MODULE: CREATE_UNPHASED
+    //
+    // Run annotateCNA.pl and parseVcf.pl to generate X (if male) and Y unphased VCFs
+    CREATE_UNPHASED(
+        ch_all_snp,
+        dbsnpsnv
+    )
+    unphased_x  = CREATE_UNPHASED.out.x_unphased
+    unphased_y  = CREATE_UNPHASED.out.y_unphased
+    ch_versions = ch_versions.mix(CREATE_UNPHASED.out.versions)
 
     //
     // MODULE: CUSTOM_DUMPSOFTWAREVERSIONS

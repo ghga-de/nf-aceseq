@@ -11,9 +11,9 @@ process WIN_GENERATOR {
     tuple path(dbsnp), path(index) 
 
     output:
-    tuple val(meta), path("*.snp.tab.gz")  , emit: snp 
+    tuple val(meta), path("*.snp.tab.gz")                  , emit: snp 
     tuple val(meta), val(intervals), path("*.cnv.tab.gz")  , emit: cnv 
-    path  "versions.yml"                   , emit: versions
+    path  "versions.yml"                                   , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

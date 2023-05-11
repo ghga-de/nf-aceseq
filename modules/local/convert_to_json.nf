@@ -1,4 +1,4 @@
-process GROUP_HAPLOTYPES {
+process CONVERT_TO_JSON {
     tag "$meta.id"
     label 'process_single'
 
@@ -7,11 +7,11 @@ process GROUP_HAPLOTYPES {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta) , val(intervals), path(phased)
+    tuple val(meta), path(gc_slim)
 
     output:
-    tuple val(meta), path("*haploblocks.tab")  , emit: haplogroups
-    path  "versions.yml"                       , emit: versions
+    tuple val(meta), path("*.json")  , emit: json 
+    path  "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -19,13 +19,13 @@ process GROUP_HAPLOTYPES {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_name = intervals == "chrX" ? "chr23" : intervals
 
     """
-    group_genotypes.py \\
-        --infile $phased \\
-        --out ${prefix}.${interval_name}.haploblocks.tab \\
-        --minHT $params.minHT
+    convertTabToJson.py \\
+        --file 	$gc_slim \\
+        --id 	$prefix \\
+        --out 	${prefix}.gc_corrected.json \\
+        --key	$params.gc_bias_json_key
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
