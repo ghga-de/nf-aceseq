@@ -175,19 +175,25 @@ workflow ACESEQ {
         beagle_map,
         dbsnpsnv
     )
-    ch_versions    = ch_versions.mix(PHASING.out.versions)
-    snp_pos_haplo  = PHASING.out.ch_snp_haplotypes
-
+    ch_versions     = ch_versions.mix(PHASING.out.versions)
+    snp_pos_haplo   = PHASING.out.ch_snp_haplotypes
+    haploblocks_chr = PHASING.out.ch_haploblocks
     //
     // SUBWORKFLOW: GET_BREAKPOINTS_SEGMENTS: 
     //
     GET_BREAKPOINTS_SEGMENTS(
         ch_corr_win,
+        ch_corr_qual,
         snp_pos_haplo,
+        haploblocks_chr,
         ch_sex_file,
-        centromers
+        centromers,
+        chrlength,
+        mapability
     )
 
+    //// createUnphasedFiles.sh /////
+    
     // WARN: this is probably needed for no-control samples!    
     //
     // MODULE: CREATE_UNPHASED
