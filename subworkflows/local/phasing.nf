@@ -42,6 +42,7 @@ workflow PHASING {
         other: true}
         .set{sex}
 
+    //// phasing_X.sh ////
 
     /////// Female workflow - Run for chr1-22 and chrX /////////
     // Prepare intervals
@@ -71,6 +72,8 @@ workflow PHASING {
         "female"
     )
     ch_sample_g = MAKE_MOCK_1.out.sample_g
+
+    //// phasing.sh ////
 
     //// Male Workflow ////
     // filter out both X and Y if gender is Male!
@@ -142,8 +145,12 @@ workflow PHASING {
     GROUP_HAPLOTYPES(
         EMBED_HAPLOTYPES.out.phased_vcf
     )
-    haplogroups_ch = GROUP_HAPLOTYPES.out.haplogroups
     versions = versions.mix(GROUP_HAPLOTYPES.out.versions)
+
+    GROUP_HAPLOTYPES.out.haplogroups
+                        .groupTuple()
+                        .join(haploblock_x)
+                        .set{ch_haploblocks}
 
     // if sample is male phased_vcf_x will be used as mock otherwise it is already in phased_vcf
     // warn: experimental: if sample is female phased_vcf_x will be an empty channel!.
@@ -154,17 +161,21 @@ workflow PHASING {
 
     phased_all.map {it -> tuple( it[0], it[2], it[4])}
                 .join(all_snp_ch, by: [0])
-                .set{haplogroups_ch}
-                
+                .set{phasedvcf_ch}
+
+    //// haplotypes.sh ////
+
     //
     // MODULE: ADD_HAPLOTYPES
     //
     // add_haplotypes.py, merge chromosomes and add haplogroups
     ADD_HAPLOTYPES(
-        haplogroups_ch
+        phasedvcf_ch
     )
     versions          = versions.mix(ADD_HAPLOTYPES.out.versions)
     ch_snp_haplotypes = ADD_HAPLOTYPES.out.snp_haplotypes
+
+    ///// createcontrolbafplots.sh /////
 
     // 
     // MODULE: CREATE_BAF_PLOTS
@@ -181,5 +192,6 @@ workflow PHASING {
     versions
     ch_sample_g
     ch_snp_haplotypes
+    ch_haploblocks
     
 }

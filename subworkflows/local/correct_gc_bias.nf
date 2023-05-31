@@ -17,6 +17,8 @@ workflow CORRECT_GC_BIAS {
 
     main:
     versions = Channel.empty()
+    
+    ///// correct_gc_bias.sh ////
 
     //
     // MODULE: GC_BIAS

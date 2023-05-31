@@ -12,7 +12,7 @@ process DEFINE_BREAKPOINTS {
 
     output:
     tuple val(meta), path('*knownSegments.txt')                  , emit: known_segments
-    tuple val(meta), path('*txt')                   , emit: libloc   
+    tuple val(meta), path('*txt')                                , emit: libloc   
     tuple val(meta), path('*data.txt.gz'), path('*.txt.gz.tbi')  , emit: pscbs_data    
     path('*.pdf')    
     path  "versions.yml"  , emit: versions

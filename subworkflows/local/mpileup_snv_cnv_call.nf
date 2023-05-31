@@ -30,7 +30,9 @@ workflow MPILEUP_SNV_CNV_CALL {
     sample_ch
             .combine(intervals_ch)
             .set { combined_inputs }
-    
+
+    ///// cnv_snvMpileup.sh ////
+
     //
     // MODULE:SAMTOOLS_MPILEUP 
     //
@@ -54,6 +56,8 @@ workflow MPILEUP_SNV_CNV_CALL {
     )
     versions  = versions.mix(WIN_GENERATOR.out.versions) 
 
+    //// snvMergeFilter.sh ////
+
     //
     // MERGE_SNP: Merge and filter SNP positions
     //
@@ -71,6 +75,8 @@ workflow MPILEUP_SNV_CNV_CALL {
     )
     versions  = versions.mix(MERGE_SNP.out.versions)
     all_snp = MERGE_SNP.out.snp
+
+    ///// vcfAnno.sh ////
 
     //
     // MODULE: ESTIMATE_SEX
@@ -100,6 +106,8 @@ workflow MPILEUP_SNV_CNV_CALL {
         mappability
     )
     versions  = versions.mix(ANNOTATE_CNV.out.versions)
+
+    //// cnvMergeFilter.sh ////
 
     /////////////////// NOTE: replaceControl.sh is not implemented. This would be discussed! ///////////////////////
     //
