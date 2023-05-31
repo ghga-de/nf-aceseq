@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/usr/bin/Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
@@ -72,7 +72,7 @@ segment.CODE[lineToModify] = "#HACK... - do not stop here"
 modifiedSegmentFunction = eval(parse(text = segment.CODE))
 R.utils::reassignInPackage("segment", "DNAcopy", modifiedSegmentFunction, keepOld=F)
 
-library(PSCBS, lib.loc=libloc)
+library(PSCBS)
 # read datatable                        
 cat(paste0("reading ",file_data, "...\n\n"))
 colNamesData <- c( "a", "chromosome", "betaT", "betaN", "x", "Atumor", "Btumor", "Anormal", "Bnormal", "haplotype", "CT", "covT", "covN" )

@@ -5,7 +5,7 @@
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
 library(e1071)
-library(flexclust, lib.loc=libloc)
+library(flexclust)
 library(reshape)
 library(plyr)
 

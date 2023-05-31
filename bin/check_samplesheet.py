@@ -36,7 +36,7 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,tumor,control
+    sample,tumor,controlz
     sample_WithControl,tumor1.bam,control1.bam
     sample_WithoutControl,tumor2.bam,
     For an example see:
