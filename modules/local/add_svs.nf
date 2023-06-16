@@ -1,3 +1,5 @@
+// This process only works if there is SV file as an input
+
 process ADD_SVS {
     tag "$meta.id"
     label 'process_single'
@@ -10,8 +12,9 @@ process ADD_SVS {
     tuple val(meta) , path(knownsegments), path(svs)
 
     output:
-    tuple val(meta), path("*sv_points.txt"), path("*breakpoints.txt")  , emit: pscbs
-    path  "versions.yml"                                               , emit: versions
+    tuple val(meta), path("*sv_points.txt")    , emit: sv_points
+    tuple val(meta), path("*breakpoints.txt")  , emit: breakpoints
+    path  "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,7 +23,7 @@ process ADD_SVS {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (!params.allowMissingSVFile && sv) {
+    if (!params.allowMissingSVFile && svs) {
         """
         PSCBSgabs_plus_sv_points.py \\
             --variants  $svs \\

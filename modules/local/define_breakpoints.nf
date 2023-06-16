@@ -1,3 +1,4 @@
+//This only works with v0
 process DEFINE_BREAKPOINTS {
     tag "$meta.id"
     label 'process_medium'
@@ -7,12 +8,11 @@ process DEFINE_BREAKPOINTS {
         'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
     
     input:
-    tuple val(meta), path(gc_corrected_win), path(snp_haplo_pos),path(index), path(sexfile)
+    tuple val(meta), path(gc_corrected_win), path(snp_haplo_pos), path(index), path(sexfile)
     each file(centromers)
 
     output:
     tuple val(meta), path('*knownSegments.txt')                  , emit: known_segments
-    tuple val(meta), path('*txt')                                , emit: libloc   
     tuple val(meta), path('*data.txt.gz'), path('*.txt.gz.tbi')  , emit: pscbs_data    
     path('*.pdf')    
     path  "versions.yml"  , emit: versions
@@ -33,7 +33,7 @@ process DEFINE_BREAKPOINTS {
         --file_knownSegments ${prefix}.knownSegments.txt \\
         --file_centromeres  $centromers \\
         --file_data ${prefix}_pscbs_data.txt.gz \\
-        --libloc    ${prefix}_pscbs_libloc.txt           
+        --libloc    ""           
 
         tabix -f -s 2 -b 1 --comment a ${prefix}_pscbs_data.txt.gz
 

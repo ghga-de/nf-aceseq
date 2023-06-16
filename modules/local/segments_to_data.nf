@@ -7,11 +7,12 @@ process SEGMENTS_TO_DATA {
         'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
 
     input:
-    tuple val(meta) , path(homdel_segments), path(pscbs_data), path(index2)
-
+    tuple val(meta) , path(segments_w_homodel), path(pscbs_data), path(index)
+    val(update)
+    
     output:
-    tuple val(meta), path("*seg.txt.gz"), emit: all_seg
-    path  "versions.yml"                , emit: versions
+    tuple val(meta), path("*seg_${update}.txt.gz"), path("*seg_${update}.txt.gz.tbi"), emit: all_seg
+    path  "versions.yml"                          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,8 +24,10 @@ process SEGMENTS_TO_DATA {
     """
     segments_to_data.py \\
         --pscbs  $pscbs_data \\
-        --input  $homdel_segments \\
-        --output ${prefix}_all_seg.txt.gz
+        --input  $segments_w_homodel \\
+        --output ${prefix}_all_seg_${update}.txt.gz
+
+    tabix -f -s 1 -b 3 -e 4 ${prefix}_all_seg_${update}.txt.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

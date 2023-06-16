@@ -7,20 +7,21 @@ process PSCBS_SEGMENTATION {
         'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
     
     input:
-    tuple val(meta), path(svpoints), path(breakpoints), path(pscbs_data), path(index), path(libloc)
+    tuple val(meta), path(breakpoints), path(pscbs_data), path(index)
     each file(chrlenght)
 
     output:
-    tuple val(meta), path(svpoints), path('*fit.txt')   , emit: segments   
-    path  "versions.yml"                                , emit: versions
+    tuple val(meta),path('*fit.txt')   , emit: segments   
+    path  "versions.yml"               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def args      = task.ext.args ?: ''
+    def prefix    = task.ext.prefix ?: "${meta.id}"
     def nocontrol = meta.iscontrol == "1" ? "" : "--nocontrol TRUE"
+    def sv        = params.allowMissingSVFile? "--sv false" : "--sv true"
 
     """
     pscbs_all.R \\
@@ -31,8 +32,8 @@ process PSCBS_SEGMENTATION {
         --minwidth  $params.min_seg_width \\
         --undo.SD   $params.undo_SD \\
         -h  $params.pscbs_prune_height \\
-        --sv    $svpoints \\
-        --libloc    $libloc \\
+        --libloc    "" \\
+        $sv \\
         $nocontrol
 
     cat <<-END_VERSIONS > versions.yml

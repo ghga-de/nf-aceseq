@@ -1,16 +1,16 @@
 process ESTIMATE_PEAKS {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
     
     input:
-    tuple val(meta), path(allsnps), path(clusteredsegments), path(sexfile)
+    tuple val(meta), path(snps_update_3), path(index), path(clusteredsegments), path(sexfile)
 
     output:
-    tuple val(meta), path('*_combi_level.txt')    , emit: segment_peaks   
+    tuple val(meta), path('*_combi_level.txt')    , emit: segment_w_peaks   
     path  "versions.yml"                          , emit: versions
 
     when:
@@ -22,10 +22,8 @@ process ESTIMATE_PEAKS {
 
     
     """
-    tabix -f -s 1 -b 3 -e 4 $allsnps 
-
     purity_ploidy.R \\
-        --file  $allsnps \\
+        --file  $snps_update_3 \\
         --gender    $sexfile \\
         --segments  $clusteredsegments \\
         --segOut    ${prefix}_combi_level.txt \\

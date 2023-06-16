@@ -7,13 +7,13 @@ process CLUSTER_SEGMENTS {
         'docker://kubran/odcf_aceseqcalling:v3':'kubran/odcf_aceseqcalling:v3' }"
     
     input:
-    tuple val(meta), path(all_seg), path(homdels), path(sexfile), path(gc_corrected), path(haplogroups), path(haplogroups_chr23)
+    tuple val(meta), path(snp_update1), path(index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), path(haplogroups_chr23)
     each file(chrlenght)
 
     output:
-    tuple val(meta), path('*normal.txt')     , emit: clustered_segments   
-    tuple val(meta), path('*all_seg_2.txt.gz'), path('*all_seg_2.txt.gz.tbi') , emit: all_segments2
-    path  "versions.yml"                     , emit: versions
+    tuple val(meta), path('*normal.txt')      , emit: clustered_segments   
+    tuple val(meta), path('*all_seg_2.txt.gz'), path('*all_seg_2.txt.gz.tbi') , emit: snp_update2
+    path  "versions.yml"                      , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,12 +23,11 @@ process CLUSTER_SEGMENTS {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    tabix -f -s 1 -b 2 -e 3 --comment chromosome $homdels
-    tabix -f -s 1 -b 3 -e 4 $all_seg
+    tabix -f -s 1 -b 2 -e 3 --comment chromosome $segments_w_homodel
 
     manual_pruning.R \\
-        --file  $all_seg \\
-        --segments  $homdels \\
+        --file  $snp_update1 \\
+        --segments  $segments_w_homodel \\
         --out . \\
         --segOut    ${prefix}_clustered_and_pruned_and_normal.txt \\
         --min_seg_length    $params.min_seg_length_prune \\
@@ -39,7 +38,7 @@ process CLUSTER_SEGMENTS {
         --min_distance  $params.min_distance \\
         --blockPre	${prefix}.chr	\\
         --blockSuf  haploblocks.tab   \\
-        --newFile   ${prefix}_all_seg2.txt \\
+        --newFile   ${prefix}_all_seg2.txt.gz \\
         --sex $sexfile \\
         --gcCovWidthFile  $gc_corrected \\
         --chrLengthFile   $chrlenght \\
@@ -48,8 +47,9 @@ process CLUSTER_SEGMENTS {
         --runInDebugMode  false
 
     # Not sure why there is a NULL line in the end of the segments file
-    cat ${prefix}_all_seg2.txt  | grep -v NULL | bgzip -f > ${prefix}_all_seg_2.txt.gz
+    zcat ${prefix}_all_seg2.txt.gz  | grep -v NULL | bgzip -f > ${prefix}_all_seg_2.txt.gz.2
 
+    mv ${prefix}_all_seg_2.txt.gz.2 ${prefix}_all_seg_2.txt.gz
     tabix -f -s 1 -b 2 -e 2 --comment chromosome ${prefix}_all_seg_2.txt.gz
 
     cat <<-END_VERSIONS > versions.yml

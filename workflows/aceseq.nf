@@ -20,7 +20,6 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chr_prefix     = Channel.value(params.chr_prefix)
 chrlength      = params.chrom_sizes           ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-contigs        = params.contig_file           ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
 rep_time       = params.replication_time_file ? Channel.fromPath(params.replication_time_file, checkIfExists: true) : Channel.empty() 
 gc_content     = params.gc_content_file       ? Channel.fromPath(params.gc_content_file, checkIfExists: true) : Channel.empty() 
 centromers     = params.centromer_file        ? Channel.fromPath(params.centromer_file, checkIfExists: true) : Channel.empty() 
@@ -67,7 +66,8 @@ include { INPUT_CHECK              } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CNV_CALL     } from '../subworkflows/local/mpileup_snv_cnv_call'
 include { PHASING                  } from '../subworkflows/local/phasing'
 include { CORRECT_GC_BIAS          } from '../subworkflows/local/correct_gc_bias'
-include { GET_BREAKPOINTS_SEGMENTS } from '../subworkflows/local/get_breakpoints_segments'
+include { BREAKPOINTS_SEGMENTS     } from '../subworkflows/local/breakpoints_segments'
+include { PLOTS_REPORTS            } from '../subworkflows/local/plots_reports'
 
 
 /*
@@ -110,7 +110,6 @@ workflow ACESEQ {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch   = INPUT_CHECK.out.ch_sample
 
     if ( !params.chrom_sizes) {
         //
@@ -127,27 +126,26 @@ workflow ACESEQ {
     // MODULE: Extract sample name from BAM
     //
     GREP_SAMPLENAME(
-        sample_ch
+        INPUT_CHECK.out.ch_sample
     )
     ch_versions = ch_versions.mix(GREP_SAMPLENAME.out.versions)
 
     // Prepare an input channel of sample with sample names
     name_ch   = GREP_SAMPLENAME.out.samplenames
-    ch_sample = sample_ch.join(name_ch)
+    INPUT_CHECK.out.ch_sample.join(name_ch)
+                            .set{sample_ch}
 
     //
     // SUBWORKFLOW: MPILEUP_SNV_CNV_CALL: Call SNVs
     //
     MPILEUP_SNV_CNV_CALL(
-        ch_sample, 
+        sample_ch, 
         ref, 
         chrlength,
         dbsnpsnv,
         mapability
     )
     ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
-    ch_all_snp     = MPILEUP_SNV_CNV_CALL.out.all_snp
-    ch_sex_file    = MPILEUP_SNV_CNV_CALL.out.ch_sex
 
     //
     // SUBWORKFLOW: CORRECT_GC_BIAS
@@ -158,39 +156,56 @@ workflow ACESEQ {
         chrlength,
         gc_content
     )
-    ch_corr_qual = CORRECT_GC_BIAS.out.qual_corrected
-    ch_corr_win  = CORRECT_GC_BIAS.out.windows_corrected
     ch_versions  = ch_versions.mix(CORRECT_GC_BIAS.out.versions)
 
     //
     // SUBWORKFLOW: PHASING: Call mpileup and beagle
     //
-    ch_input_phase = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.ch_sex)
+
     PHASING(
-        ch_input_phase,
-        ch_all_snp, 
+        sample_ch,
+        MPILEUP_SNV_CNV_CALL.out.all_snp, 
         ref, 
         chrlength,
         beagle_ref,
         beagle_map,
-        dbsnpsnv
+        dbsnpsnv,
+        MPILEUP_SNV_CNV_CALL.out.ch_sex
     )
     ch_versions     = ch_versions.mix(PHASING.out.versions)
-    snp_pos_haplo   = PHASING.out.ch_snp_haplotypes
-    haploblocks_chr = PHASING.out.ch_haploblocks
+
     //
-    // SUBWORKFLOW: GET_BREAKPOINTS_SEGMENTS: 
+    // SUBWORKFLOW: BREAKPOINTS_SEGMENTS: 
     //
-    GET_BREAKPOINTS_SEGMENTS(
-        ch_corr_win,
-        ch_corr_qual,
-        snp_pos_haplo,
-        haploblocks_chr,
-        ch_sex_file,
+    BREAKPOINTS_SEGMENTS(
+        CORRECT_GC_BIAS.out.windows_corrected,
+        CORRECT_GC_BIAS.out.qual_corrected,
+        PHASING.out.ch_snp_haplotypes,
+        PHASING.out.ch_haploblocks,
+        MPILEUP_SNV_CNV_CALL.out.ch_sex,
         centromers,
         chrlength,
         mapability
     )
+    ch_versions     = ch_versions.mix(BREAKPOINTS_SEGMENTS.out.versions)
+
+    //
+    // SUBWORKFLOW: PLOTS_REPORTS: 
+    //
+    PLOTS_REPORTS(
+        BREAKPOINTS_SEGMENTS.out.ch_sv_points,
+        BREAKPOINTS_SEGMENTS.out.ch_all_snp_update3,
+        BREAKPOINTS_SEGMENTS.out.ch_purity_ploidy,
+        BREAKPOINTS_SEGMENTS.out.ch_segment_w_peaks,
+        MPILEUP_SNV_CNV_CALL.out.ch_sex,
+        CORRECT_GC_BIAS.out.all_corrected,
+        chrlength
+    )
+
+    //
+    // SUBWORKFLOW: ESTIMATE_HRD_SCORE: 
+    //
+
 
     //// createUnphasedFiles.sh /////
     
@@ -200,7 +215,7 @@ workflow ACESEQ {
     //
     // Run annotateCNA.pl and parseVcf.pl to generate X (if male) and Y unphased VCFs
     CREATE_UNPHASED(
-        ch_all_snp,
+        MPILEUP_SNV_CNV_CALL.out.all_snp,
         dbsnpsnv
     )
     unphased_x  = CREATE_UNPHASED.out.x_unphased

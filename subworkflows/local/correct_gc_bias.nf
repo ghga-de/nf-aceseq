@@ -32,6 +32,7 @@ workflow CORRECT_GC_BIAS {
     )
     qual_corrected    = GC_BIAS.out.corrected_quality
     windows_corrected = GC_BIAS.out.corrected_windows
+    all_corrected     = GC_BIAS.out.all_corrected
     versions          = versions.mix(GC_BIAS.out.versions)
 
     //
@@ -48,4 +49,5 @@ workflow CORRECT_GC_BIAS {
     versions
     qual_corrected
     windows_corrected
+    all_corrected
 }

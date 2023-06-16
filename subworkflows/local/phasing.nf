@@ -26,6 +26,7 @@ workflow PHASING {
     beagle_ref    // channel: directory
     beagle_map    // channel: directory
     dbsnp         // channel: [path(dbsnp), path(index)]
+    sex_file      // channel: [path (sex.txt)]
 
     main:
     versions     = Channel.empty()
@@ -36,7 +37,8 @@ workflow PHASING {
     
     // brach samples for sexes
     // discuss about klinefelter case (XXY)
-    sample_ch.branch{
+    ch_sample = sample_ch.join(sex_file) 
+    ch_sample.branch{
         male:  it[7].readLines().get(0) == "male"
         female: it[7].readLines().get(0) == "female|klinefelter"
         other: true}
@@ -180,10 +182,8 @@ workflow PHASING {
     // 
     // MODULE: CREATE_BAF_PLOTS
     //
-    ch_sex    = sample_ch.map {it -> tuple( it[0],it[7])}
-    baf_input = ch_snp_haplotypes.join(ch_sex)
     CREATE_BAF_PLOTS(
-        baf_input,
+        ch_snp_haplotypes.join(sex_file),
         chrlength
     )
     versions          = versions.mix(CREATE_BAF_PLOTS.out.versions)

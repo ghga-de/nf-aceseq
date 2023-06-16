@@ -15,7 +15,8 @@ process GC_BIAS {
     output:
     tuple val(meta), path('*.slim.txt')                 , emit: gc
     tuple val(meta), path('*_all.cnv.corrected.tab.gz') , emit: corrected_windows 
-    tuple val(meta), path('*.gc_corrected.tsv')         , emit: corrected_quality     
+    tuple val(meta), path('*.gc_corrected.tsv')         , emit: corrected_quality  
+    tuple val(meta), path('*all_corrected.txt.gz')      , emit: all_corrected    
     path('*_all_seg.gc_corrected.txt')
     path('*.tsv')   
     path('*.png')                

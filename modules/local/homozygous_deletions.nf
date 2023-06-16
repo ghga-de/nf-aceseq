@@ -7,12 +7,12 @@ process HOMOZYGOUS_DELETIONS {
     'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
 
     input:
-    tuple val(meta), path(sv_points) , path(segments)
-    tuple path(mappability)          , path(index)
+    tuple val(meta) , path(segments), path(sv_points)
+    tuple path(mappability)         , path(index)
 
     output:
-    tuple val(meta), path('*.txt.gz') , emit: homdels
-    path  "versions.yml"               , emit: versions
+    tuple val(meta), path('*homozygous_deletion.txt.gz') , emit: segments_w_homodel
+    path  "versions.yml"                                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

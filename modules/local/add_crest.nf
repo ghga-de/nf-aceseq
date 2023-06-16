@@ -1,17 +1,19 @@
+// This process only works if there is SV file as an input
 process ADD_CREST {
     tag "$meta.id"
     label 'process_single'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
 
     input:
-    tuple val(meta) , path(svpoints), path(breakpoints), path(crest_deldupinv), path(crest_transloc)
+    tuple val(meta) , path(svpoints), path(knownsegments), path(crest_deldupinv), path(crest_transloc)
 
     output:
-    tuple val(meta), path("*sv_points2.txt"), path("*breakpoints2.txt")  , emit: pscbs
-    path  "versions.yml"                                                 , emit: versions
+    tuple val(meta), path("*sv_points2.txt")     , emit: sv_points
+    tuple val(meta),  path("*breakpoints2.txt")  , emit: breakpoints
+    path  "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,12 +22,12 @@ process ADD_CREST {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (!params.allowMissingSVFile && sv) {
+    if (!params.allowMissingSVFile && svs) {
         """
         PSCBSgabs_plus_CRESTpoints.py \\
             --crest_deldupinv $crest_deldupinv    \\
             --crest_tx $crest_transloc  \\
-            --known_segments    $breakpoints \\
+            --known_segments    $knownsegments \\
             --output    ${prefix}_breakpoints2.txt \\
             --sv_out    ${prefix}_sv_points2.txt \\
             --DDI_length    $params.min_DDI_length
@@ -39,8 +41,10 @@ process ADD_CREST {
     else{
 
         """
-        cp $breakpoints ${prefix}_breakpoints2.txt
-        cp $svpoints ${prefix}_sv_points2.txt
+
+        cp $knownsegments ${prefix}_breakpoints2.txt
+        sed -i '1s/^chr/#chr/' ${prefix}_breakpoints2.txt
+        echo "" > ${prefix}_sv_points2.txt
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
