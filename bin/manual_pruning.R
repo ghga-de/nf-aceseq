@@ -1,8 +1,10 @@
-#!/usr/bin/R
+#!/usr/bin/env Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
+
+# Changes by kuebra.narci@dkfz.de : Function scripts are in the same directory as the main script (bin)
 
 library(mclust)
 library(fpc)
@@ -19,10 +21,8 @@ min_num_SNPs =15
 libloc=NULL
 spec <- matrix(c('file',                'f', 1, "character",
                  'segments',            's', 1, "character",
-				 'functions',		  	'p', 1, "character",
 				 'blockPre',		  	'b', 1, "character",     # prefix of file containing haplotype groups
 				 'blockSuf',		  	'u', 1, "character",     # suffix of file containing haplotype groups
-				 'adjustAlleles',	  	'a', 1, "character",     # function to swap alleles where necessary
 				 'sex',		  	  	  	'g', 1, "character",     # sex of patient
 				 'newFile',				'w', 1, "character",
                  'out',                 'x', 1, "character",
@@ -48,11 +48,9 @@ for(item in names(opt)){
 
 cat(paste0("file: ",file, "\n\n"))
 cat(paste0("segments: ",segments, "\n\n"))
-cat(paste0("functions: ",functions, "\n\n" ))
 cat(paste0("out: ",out, "\n\n"))
 cat(paste0("segOut: ",segOut, "\n\n"))
 cat(paste0("blocks: ",blockPre, "*",blockSuf, "\n\n"))
-cat(paste0("adjustAlleles: ",adjustAlleles, "\n\n"))
 cat(paste0("gcCovWidthFile: ",gcCovWidthFile, "\n\n"))
 cat(paste0("newFile: ",newFile, "\n\n"))
 cat(paste0("min_seg_length: ",min_seg_length, "\n\n"))
@@ -70,7 +68,7 @@ cat("\n")
 if ( libloc == "" | libloc == TRUE ){
 	libloc=NULL
 }
-
+functions <- paste0(script_dir, "/cluster_functions.R")
 source(functions)
 
 mclust.options(hcUse = "VARS") # set hcUse to use VARS-method (method will be changed to SVD mith mclust>=5.4 which leads to different results)
@@ -758,6 +756,7 @@ test_new$minStop =NA
 test_new$maxStop =NA
     
 #add allele adjustment here (use a function that returns dataAll?
+adjustAlleles <- paste0(script_dir, "/adjustAlleleFreqs.R")
 source(adjustAlleles)
  
 for (chr in  seq_len(maxChr) ) {

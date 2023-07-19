@@ -13,7 +13,6 @@ process ESTIMATE_SEX {
 
     output:
     tuple val(meta), path('*_sex.txt')        , emit: sex   
-    tuple val(meta), path('*.sample_g.txt')   , emit: sample_g, optional: true             
     path  "versions.yml"                      , emit: versions
 
     when:
@@ -33,11 +32,6 @@ process ESTIMATE_SEX {
             --min_Y_ratio $params.min_Y_ratio \\
             --min_X_ratio $params.min_X_ratio \\
             --file_out ${prefix}_sex.txt
-
-        ##create sample_g file
-        echo "ID_1 ID_2 missing sex" > ${prefix}.sample_g.txt
-        echo "0 0 0 D" >> ${prefix}.sample_g.txt
-        echo "${prefix} ${prefix} 0 2" >> ${prefix}.sample_g.txt
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

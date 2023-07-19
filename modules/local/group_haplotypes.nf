@@ -10,8 +10,8 @@ process GROUP_HAPLOTYPES {
     tuple val(meta) , val(intervals), path(phased)
 
     output:
-    tuple val(meta),val(intervals), path("*.vcf.gz")  , emit: phased_blocks
-    path  "versions.yml"                              , emit: versions
+    tuple val(meta), path("*haploblocks.tab")  , emit: haplogroups
+    path  "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -19,11 +19,12 @@ process GROUP_HAPLOTYPES {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def interval_name = intervals == "chrX" ? "chr23" : intervals
 
     """
     group_genotypes.py \\
         --infile $phased \\
-        --out ${prefix}.${intervals}.haplogroups \\
+        --out ${prefix}.${interval_name}.haploblocks.tab \\
         --minHT $params.minHT
 
     cat <<-END_VERSIONS > versions.yml

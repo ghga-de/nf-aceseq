@@ -10,7 +10,7 @@ process MERGE_CNV {
     tuple val(meta)        , path(cnv)
 
     output:
-    tuple val(meta), path("*.anno.tab.gz")  , emit: cnv 
+    tuple val(meta), path("*cnv.tab.gz")    , emit: cnv 
     path  "versions.yml"                    , emit: versions
 
     when:
@@ -24,7 +24,7 @@ process MERGE_CNV {
     merge_and_filter_cnv.py \\
         --inputpath "${prefix}.chr" \\
         --inputsuffix ".cnv.anno.tab.gz" \\
-        --output ${prefix}.cnv.anno.tab.gz \\
+        --output ${prefix}.cnv.tab.gz \\
         --coverage $params.cnv_min_coverage \\
         --mappability $params.mapping_quality \\
         --NoOfWindows  $params.min_windows 

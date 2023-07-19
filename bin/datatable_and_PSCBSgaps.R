@@ -1,11 +1,12 @@
-#!/usr/bin/R
+#!/usr/bin/env Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
 library(getopt)
-
+library(PSCBS)
+library(GenomicRanges)
 
 script_dir = dirname(get_Rscript_filename())
 
@@ -52,9 +53,6 @@ if ( libloc == "" | libloc == TRUE ){
 }
 cat(paste0("libloc: ", libloc, "\n\n"))
 cat("\n")
-
-library(PSCBS, lib.loc=libloc)
-library(GenomicRanges)
 
 #input coverage data, 1 kb windows
 cat(paste0("reading ", file_cnv, "...\n\n"))
@@ -162,7 +160,7 @@ p <- ggplot( data=completeTable, aes(x=betaT, y=..scaled..), colour='red') + geo
 p <- p + geom_density(aes(x=betaN, y=..scaled..), colour='blue')
 p <- p + scale_colour_manual( name=c("Tumor","Normal") , breaks=c('betaT', 'betaN'), values=c('red','blue') )
 p <- p + ggtitle("control plots of betaT and betaN") + ylab("scaled density")
-ggplot2::ggsave(file_beta, p, width=6, height=6, units='cm')
+ggplot2::ggsave(file_beta, p, width=12, height=12, units='cm')
 
 #PSCBS
 cat("PSCBS\n")

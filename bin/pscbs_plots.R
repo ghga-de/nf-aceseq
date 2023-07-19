@@ -1,8 +1,10 @@
-#!/usr/bin/R
+#!/usr/bin/Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
+
+# Change by kuebra.narci@dkfz-de : Read all_corrected.txt.gz file from path (using corrected param)
 
 library(getopt)
 script_dir = dirname(get_Rscript_filename())
@@ -18,9 +20,9 @@ spec <- matrix(c('SNPfile',       'f', 1, "character",
                  'file_sex',      'g', 1, "character", 
                  'sv_YN',         'y', 1, "character", 
                  'ID',            'i', 1, "character", 
-				 'pipelineDir',	  'd', 1, "character",
 				 'ymaxcov_threshold', 't', 1, "numeric",
-				 'annotatePlotsWithGenes', 'a', 1, "character"
+				 'annotatePlotsWithGenes', 'a', 1, "character",
+				 'corrected',      'e', 1, "character"
                 ), ncol = 4, byrow = TRUE)
                
  
@@ -39,13 +41,13 @@ cat(paste0("outDir: ", outDir, "\n\n"))
 cat(paste0("file_sex: ", file_sex, "\n\n"))
 cat(paste0("sv_YN: ", sv_YN, "\n\n"))
 cat(paste0("ID: ", ID, "\n\n"))
-cat(paste0("pipelineDir: ", pipelineDir, "\n\n"))
 cat(paste0("ymaxcov_threshold: ", ymaxcov_threshold, "\n\n"))
+cat(paste0("corrected: ", corrected, "\n\n"))
 cat("\n")
 
-source( file.path(pipelineDir, "pscbs_plots_functions.R") )
-source( file.path(pipelineDir, "annotateCNA.R") )
-source( file.path(pipelineDir, "correctGCBias_functions.R") ) # for adjustCoordinates()
+source( file.path(script_dir, "pscbs_plots_functions.R") )
+source( file.path(script_dir, "annotateCNA.R") )
+source( file.path(script_dir, "correctGCBias_functions.R") ) # for adjustCoordinates()
 
 cat("reading \n\n")
 
@@ -218,8 +220,8 @@ plotAll <- function(dat, comb, ploi, TCC, roundPloi, chrCount, secondChoicePloid
     colnames(chrLengthTab)[1:2]  <- c("chromosome", "length")
     chrLengthTab$chromosome <- as.numeric(chrLengthTab$chromosome)
     chrLengthTab <- chrLengthTab[order(chrLengthTab$chromosome),]
-    plotDir = paste0(outDir,"/plots")
-    sub_order_file = read.table(file = paste0(plotDir,"/all_corrected.txt.gz"), sep="\t", header = T)
+    plotDir = paste0(outDir)
+    sub_order_file = read.table(corrected, sep="\t", header = T)
     
     coordinates <- adjustCoordinates( chrLengthTab, sub_order_file )
     coverageTab <- coordinates$coverageTab

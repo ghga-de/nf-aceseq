@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
@@ -69,10 +69,10 @@ source(functionPath)
 
 plotDir <- dirname(corPlot)
 outputfile_gc  <- paste0(corPlot) #includes plotDir already
-outputfile_rep <- paste0(plotDir,"/", pid, "_qc_rep_corrected.png")
+outputfile_rep <- paste0(pid, "_qc_rep_corrected.png")
 
 # define files for output of quantification of correction factors
-outrepQuant_file <- paste0(plotDir,"/",pid,"_qc_repQuant.tsv")
+outrepQuant_file <- paste0(pid,"_qc_repQuant.tsv")
 outGCcorrectQuant_file <- corTab
 plot_flag <- 1
 restrict_flag <- 1
@@ -214,7 +214,7 @@ mean_delta_curvature <- mean(delta_curvature)
 
 if ( writeGCcorrect_flag == 1 ){
 	sub_order_file = order_file[ ,c("chromosome", "start", "corrected_covN4", "corrected_covT4", "corrected_covR4")]
-	write.table( sub_order_file, paste0(plotDir, "/", pid, "_all_seg.gc_corrected.txt") ,sep="\t", col.names=T, row.names=F, quote=F )
+	write.table( sub_order_file, paste0(pid, "_all_seg.gc_corrected.txt") ,sep="\t", col.names=T, row.names=F, quote=F )
 }
 
 cat("correction for replication timing...\n")

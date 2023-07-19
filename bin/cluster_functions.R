@@ -1,11 +1,11 @@
-#!/usr/bin/R
+#!/usr/bin/env Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
 library(e1071)
-library(flexclust, lib.loc=libloc)
+library(flexclust)
 library(reshape)
 library(plyr)
 
