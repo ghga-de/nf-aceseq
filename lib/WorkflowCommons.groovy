@@ -104,16 +104,4 @@ class WorkflowCommons {
         }
         return num_vars
     }
-
-    //
-    // Function to read out sex file
-    //
-    public static String getSex(txtfile) {
-        txtfile.eachLine{
-            def line = it.trim()
-            if (line) {
-                return line
-            }
-        }
-    }
 }

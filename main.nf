@@ -5,8 +5,6 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Github : https://github.com/kubranarci/nf-aceseq
 
-    Website: https://nf-co.re/aceseq
-    Slack  : https://nfcore.slack.com/channels/aceseq
 ----------------------------------------------------------------------------------------
 */
 

@@ -41,7 +41,9 @@ beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle
                                                 : Channel.empty()
 beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map + '/plink.*.GRCh38.CHR.map', checkIfExists: true ).collect() 
                                                 : Channel.empty()    
-
+// Blacklist        
+blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
+                                                : Channel.empty()   
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -68,6 +70,7 @@ include { PHASING                  } from '../subworkflows/local/phasing'
 include { CORRECT_GC_BIAS          } from '../subworkflows/local/correct_gc_bias'
 include { BREAKPOINTS_SEGMENTS     } from '../subworkflows/local/breakpoints_segments'
 include { PLOTS_REPORTS            } from '../subworkflows/local/plots_reports'
+include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
 
 
 /*
@@ -201,11 +204,18 @@ workflow ACESEQ {
         CORRECT_GC_BIAS.out.all_corrected,
         chrlength
     )
+    ch_versions     = ch_versions.mix(PLOTS_REPORTS.out.versions)
 
     //
-    // SUBWORKFLOW: ESTIMATE_HRD_SCORE: 
+    // SUBWORKFLOW: HDR_ESTIMATION: 
     //
 
+    HDR_ESTIMATION(
+        PLOTS_REPORTS.out.json_report,
+        blacklist,
+        MPILEUP_SNV_CNV_CALL.out.ch_sex,
+        centromers
+    )
 
     //// createUnphasedFiles.sh /////
     

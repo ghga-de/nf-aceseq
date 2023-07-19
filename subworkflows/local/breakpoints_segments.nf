@@ -1,5 +1,5 @@
 //
-// SNVCALL: RUN 
+// BREAKPOINTS_SEGMENTS: RUN 
 //
 
 params.options = [:]
