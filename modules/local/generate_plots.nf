@@ -13,9 +13,9 @@ process GENERATE_PLOTS {
 
     output:
     path('*.png')   
-    path('*.txt')
-    tuple val(meta),   path("*_cnv_parameter_*.txt")  , emit: cnv_params
-    path  "versions.yml"                              , emit: versions
+    tuple val(meta), path('*.txt')                   , emit: hdr_estimate_files 
+    tuple val(meta), path("*_cnv_parameter_*.txt")   , emit: cnv_params
+    path  "versions.yml"                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

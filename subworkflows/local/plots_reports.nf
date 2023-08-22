@@ -38,7 +38,8 @@ workflow PLOTS_REPORTS {
         ch_input,
         chrlength
     )
-    versions    = versions.mix(GENERATE_PLOTS.out.versions)
+    hdr_files = GENERATE_PLOTS.out.hdr_estimate_files
+    versions  = versions.mix(GENERATE_PLOTS.out.versions)
 
     //
     // MODULE: TAB_TO_CNV
@@ -51,5 +52,6 @@ workflow PLOTS_REPORTS {
 
     emit:
     json_report
+    hdr_files
     versions
 }

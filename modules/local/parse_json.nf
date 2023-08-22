@@ -7,9 +7,10 @@ process PARSE_JSON {
         'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
 
     input:
-    tuple val(meta) , path(json), path(sexfile)
+    tuple val(meta) , path(json), path(txt_files), path(sexfile)
     path(blacklist)
     path(centromers)
+    path(cytobands)
 
     output:
     tuple val(meta), path("*.txt"), emit: txt
@@ -29,7 +30,8 @@ process PARSE_JSON {
         -m $params.legacyMode \\
         -b $blacklist \\
         -s $sexfile \\
-        -c $centromers 
+        -c $centromers \\
+        -y $cytobands
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

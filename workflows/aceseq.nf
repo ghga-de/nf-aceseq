@@ -23,6 +23,7 @@ chrlength      = params.chrom_sizes           ? Channel.fromPath(params.chrom_si
 rep_time       = params.replication_time_file ? Channel.fromPath(params.replication_time_file, checkIfExists: true) : Channel.empty() 
 gc_content     = params.gc_content_file       ? Channel.fromPath(params.gc_content_file, checkIfExists: true) : Channel.empty() 
 centromers     = params.centromer_file        ? Channel.fromPath(params.centromer_file, checkIfExists: true) : Channel.empty() 
+cytobands      = params.cytobands_file        ? Channel.fromPath(params.cytobands_file, checkIfExists: true) : Channel.empty() 
 
 if (params.fasta.contains("38")){
     ref_type = "hg38"   
@@ -212,9 +213,11 @@ workflow ACESEQ {
 
     HDR_ESTIMATION(
         PLOTS_REPORTS.out.json_report,
+        PLOTS_REPORTS.out.hdr_files,
         blacklist,
         MPILEUP_SNV_CNV_CALL.out.ch_sex,
-        centromers
+        centromers,
+        cytobands
     )
 
     //// createUnphasedFiles.sh /////
