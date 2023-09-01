@@ -3,10 +3,7 @@
 //
 
 params.options = [:]
-include { READ_JSON        } from '../../modules/local/read_json.nf'               addParams( options: params.options )
 include { PARSE_JSON       } from '../../modules/local/parse_json.nf'              addParams( options: params.options )
-
-import groovy.json.JsonSlurper
 
 workflow HDR_ESTIMATION {
     take:

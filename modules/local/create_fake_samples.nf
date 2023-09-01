@@ -10,8 +10,8 @@ process CREATE_FAKE_SAMPLES {
     tuple val(meta) , val(intervals), path(vcf)
 
     output:
-    tuple val(meta),val(intervals), path("*.vcf")  , emit: unphased_vcf 
-    path  "versions.yml"                           , emit: versions
+    tuple val(meta), val(intervals), path("*.vcf")  , emit: unphased_vcf 
+    path  "versions.yml"                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

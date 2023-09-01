@@ -2,10 +2,12 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
+<p align="center">
+    <img title="nf-aceseq workflow" src="docs/images/nf-aceseq.png" width=70%>
+</p>
+
 
 ## Introduction
-
-<!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
 
 **nf-aceseq** is a bioinformatics best-practice analysis pipeline for ACEseq Allele-specific copy number estimation adapted from [**ODCF-OTP ACEseqWorkflow**](https://github.com/DKFZ-ODCF/ACEseqWorkflow).
 
@@ -17,6 +19,9 @@ ACEseq (Allele-specific copy number estimation with whole genome sequencing) is 
 - Automated estimation of ploidy and tumor cell content
 - HRD/TAI/LST score estimation
 - With/without matched control processing
+
+For more information on theoretical part please refer to the orijinal documentation of the pipeline [here](https://aceseq.readthedocs.io/en/latest/index.html). 
+
 
 For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example.
 
@@ -39,6 +44,27 @@ The pipeline has 7 main steps:
 6. HDR estimation
 7. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
 
+## How to prepare files
+
+This workflow uses Beagle5 for imputing. Beagle uses 2 types of reference files: 
+
+
+- Preperation of generic maps:
+
+Appropriate version of the genetic map can be downloaded [here](https://bochet.gcc.biostat.washington.edu/beagle/genetic_maps/)
+
+Data processing must be done as follows:
+
+  ```console
+version="38/37/36"
+for chr in `seq 1 22` X ; do cat plink.chr${chr}.GRCh${version}.map | sed 's/^/chr/' > plink.chr${chr}.GRCh${version}.CHR.map; done
+  ```
+
+- Preperation of reference files: 
+
+An example on how the reference files for beagle are prepared can be found [here](https://bochet.gcc.biostat.washington.edu/beagle/1000_Genomes_phase3_v5a/READ_ME_beagle_ref). Be carefull to prepare the same version of reference file used for SNV calling through bcftools mpileup! 
+
+
 ## Quick Start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=22.10.1`)
@@ -48,7 +74,7 @@ The pipeline has 7 main steps:
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
    ```console
-   git clone https://github.com/kubranarci/nf-aceseq.git
+   git clone https://github.com/ghga-de/nf-aceseq.git
     ```
 
    before run do this to bin directory, make it runnable!:
@@ -80,6 +106,8 @@ The pipeline has 7 main steps:
 
 **sample**: The sample name will be tagged to the job
 
+**sex**: The sex of the sample, It is mandatory for nocontrol samples.  
+
 **tumor**: The path to the tumor file
 
 **tumor_index**: The path to the tumor index file
@@ -92,15 +120,13 @@ The pipeline has 7 main steps:
 
 ## Documentation
 
-The nf-aceseq pipeline comes with documentation about the pipeline [usage](https://nf-co.re/aceseq/usage), [parameters](https://nf-co.re/aceseq/parameters) and [output](https://nf-co.re/aceseq/output).
+The nf-aceseq pipeline comes with documentation about the pipeline [usage](https://github.com/ghga-de/nf-aceseq/usage), [parameters](https://github.com/ghga-de/nf-aceseq/parameters) and [output](https://github.com/ghga-de/nf-aceseq/output).
 
 ## Credits
 
-nf-core/aceseq was originally written by kuebra.narci@dkfz-heidelberg.de.
+nf-aceseq was originally written by kuebra.narci@dkfz-heidelberg.de.
 
-We thank the following people for their extensive assistance in the development of this pipeline:
-
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+This pipeline is adapted from [**ODCF-OTP ACEseqWorkflow**](https://github.com/DKFZ-ODCF/ACEseqWorkflow).
 
 ## Contributions and Support
 

@@ -1,5 +1,5 @@
 //
-// PLOTS_REPORTS: RUN plots.sh
+// PURITY_EVALUATION: RUN plots.sh
 //
 
 params.options = [:]
@@ -8,7 +8,7 @@ include { GENERATE_PLOTS    } from '../../modules/local/generate_plots.nf'     a
 include { TAB_TO_CNV        } from '../../modules/local/tab_to_cnv.nf'         addParams( options: params.options )
 
 
-workflow PLOTS_REPORTS {
+workflow PURITY_EVALUATION {
     take:
     sv_points        // channel: [val(meta), cnv_positions]
     all_snp_update3  // channel: [val(meta), seg.txt.gz, seg.txt.gz.tbi]

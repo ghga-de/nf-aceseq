@@ -8,9 +8,7 @@ process BEAGLE5_BEAGLE {
         'quay.io/biocontainers/beagle:5.2_21Apr21.304--hdfd78af_0' }"
 
     input:
-    tuple val(meta),val(intervals),path(vcf)
-    path(refpanel)
-    path(genmap)
+    tuple val(intervals),path(refpanel),path(genmap),val(meta),path(vcf)
 
     output:
     tuple val(meta),val(intervals), path("*.vcf.gz")  , emit: vcf
@@ -36,8 +34,8 @@ process BEAGLE5_BEAGLE {
         gt=${vcf} \\
         out=${prefix} \\
         $args \\
-        ref=ALL.${intervals}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.CHR.bref3 \\
-        map=plink.${intervals}.GRCh38.CHR.map \\
+        ref=$refpanel \\
+        map=$genmap \\
         impute=false 
 
     cat <<-END_VERSIONS > versions.yml

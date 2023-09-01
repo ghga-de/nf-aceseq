@@ -36,9 +36,9 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,tumor,tumor_index, control, control_index
-    sample_WithControl,tumor1.bam,tumot1.bai,control1.bam,control1.bai
-    sample_WithoutControl,tumor2.bam,tumor2.bai,,
+    sample,sex,tumor,tumor_index, control, control_index
+    sample_WithControl,,tumor1.bam,tumot1.bai,control1.bam,control1.bai
+    sample_WithoutControl,male,tumor2.bam,tumor2.bai,,
     For an example see:
     https://github.com/ghga-de/nf-acecalling/assets/samplesheet.csv
     """
@@ -48,7 +48,7 @@ def check_samplesheet(file_in, file_out):
 
         ## Check header
         MIN_COLS = 2
-        HEADER = ["sample", "tumor","tumor_index", "control","control_index" ]
+        HEADER = ["sample","sex", "tumor","tumor_index", "control","control_index" ]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(
@@ -78,7 +78,7 @@ def check_samplesheet(file_in, file_out):
                     )
 
                 ## Check sample name entries
-                sample, tumor, tumor_index, control, control_index = lspl[: len(HEADER)]
+                sample, sex, tumor, tumor_index, control, control_index = lspl[: len(HEADER)]
                 if sample.find(" ") != -1:
                     print(
                         f"WARNING: Spaces have been replaced by underscores for sample: {sample}"
@@ -91,9 +91,12 @@ def check_samplesheet(file_in, file_out):
                 ## Auto-detect with control/without control
                 sample_info = []  ## [sample, tumor, control, iscontrol]
                 if sample and tumor and control:  ## iscontrol true
-                    sample_info = [sample, tumor, tumor_index, control, control_index , "1"]
+                    sample_info = [sample,sex,tumor,tumor_index,control,control_index,"1"]
                 elif sample and tumor and not control:  ## iscontrol false
-                    sample_info = [sample, tumor,tumor_index,"dummy.bam","dummy.bai","0"]
+                    if sex: 
+                        sample_info = [sample,sex,tumor,tumor_index,"dummy.bam","dummy.bai","0"]
+                    else:
+                        print_error("Sex must be defined for uncontrolled samples!", "Line", line)
                 else:
                     print_error("Invalid combination of columns provided!", "Line", line)
 
@@ -112,7 +115,7 @@ def check_samplesheet(file_in, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
             fout.write(
-                ",".join(["sample", "tumor","tumor_index", "control","control_index", "iscontrol"])
+                ",".join(["sample","sex","tumor","tumor_index","control","control_index", "iscontrol"])
                 + "\n"
             )
             for sample in sorted(sample_mapping_dict.keys()):

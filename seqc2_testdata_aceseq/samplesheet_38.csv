@@ -1,2 +1,2 @@
-sample,tumor,tumor_index,control,control_index
-withcontrol,seqc2_testdata_aceseq/WES_LL_T_1_test.bam,seqc2_testdata_aceseq/WES_LL_T_1_test.bam.bai,seqc2_testdata_aceseq/WES_LL_N_1_test.bam,seqc2_testdata_aceseq/WES_LL_N_1_test.bam.bai
+sample,sex,tumor,tumor_index,control,control_index
+withcontrol,male,seqc2_testdata_aceseq/WES_LL_T_1_test.bam,seqc2_testdata_aceseq/WES_LL_T_1_test.bam.bai,seqc2_testdata_aceseq/WES_LL_N_1_test.bam,seqc2_testdata_aceseq/WES_LL_N_1_test.bam.bai

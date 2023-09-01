@@ -18,16 +18,17 @@ workflow INPUT_CHECK {
         .set {ch_sample}
 
     emit:
-    ch_sample // channel: [ val(meta), [tumor,tumor.bai],[ control, control.bai]]
+    ch_sample // channel: [ val(meta), val(sex), [tumor],[tumor.bai],[ control], [control.bai]]
     versions = SAMPLESHEET_CHECK.out.versions
 }
 
-// Function to get list of [ sample, [ tumor],[ tumor_index], [control ], [control_index] ]
+// Function to get list of [ sample, val(sex), [ tumor],[ tumor_index], [control ], [control_index] ]
 def create_bam_channel(LinkedHashMap row) {
 // create meta map
     def meta = [:]
     meta.id           = row.sample
     meta.iscontrol    = row.iscontrol
+    meta.sex          = row.sex
 
     // add path(s) of the fastq file(s) to the meta map
     def bam_meta = []
@@ -65,5 +66,3 @@ def create_bam_channel(LinkedHashMap row) {
         }
     return bam_meta
 }
-
-

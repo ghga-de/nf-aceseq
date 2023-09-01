@@ -1,4 +1,3 @@
-// else statement will change!
 process ESTIMATE_SEX {
     tag "$meta.id"
     label 'process_medium'
@@ -40,13 +39,21 @@ process ESTIMATE_SEX {
         """
     }
     else {
-        """
-        echo "male" > ${prefix}_sex.txt
+        if (meta.sex){
+            """
+            echo $meta.sex > ${prefix}_sex.txt
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-        END_VERSIONS
-        """
+            cat <<-END_VERSIONS > versions.yml
+            "${task.process}":
+                r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+            END_VERSIONS
+            """
+        }
+        else
+        {
+            echo "Gender/Sex must be spesified for nocontrol runs!"
+            exit 2
+        }
+
     }
 }
