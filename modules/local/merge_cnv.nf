@@ -8,6 +8,7 @@ process MERGE_CNV {
 
     input:
     tuple val(meta)        , path(cnv)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path("*cnv.tab.gz")    , emit: cnv 
@@ -22,7 +23,7 @@ process MERGE_CNV {
 
     """
     merge_and_filter_cnv.py \\
-        --inputpath "${prefix}.chr" \\
+        --inputpath "${prefix}.${chr_prefix}" \\
         --inputsuffix ".cnv.anno.tab.gz" \\
         --output ${prefix}.cnv.tab.gz \\
         --coverage $params.cnv_min_coverage \\

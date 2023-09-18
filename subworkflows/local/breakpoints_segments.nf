@@ -26,6 +26,7 @@ workflow BREAKPOINTS_SEGMENTS {
     centromers      // channel: centromers.txt
     chrlength       // channel: [[chr, region], [chr, region], ...]
     mappability     // channel: [mappability, index]
+    chr_prefix
 
     main:
     versions = Channel.empty()
@@ -123,10 +124,11 @@ workflow BREAKPOINTS_SEGMENTS {
                     .join(gc_corr_qual)
                     .join(haploblocks_chr)
                     .set{all_seg_ch}
-
+    
     CLUSTER_SEGMENTS(
         all_seg_ch,
-        chrlength
+        chrlength,
+        chr_prefix
     )
     versions    = versions.mix(CLUSTER_SEGMENTS.out.versions)
 

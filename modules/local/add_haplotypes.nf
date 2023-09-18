@@ -7,7 +7,7 @@ process ADD_HAPLOTYPES {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta) , path(haplo_germ),path(haplo_x), path(snp_positions), path(index)
+    tuple val(meta) , path(haplo_germ), path(haplo_x), path(snp_positions), path(index)
 
     output:
     tuple val(meta), path("*.tab.gz"), path("*.tab.gz.tbi")  , emit: snp_haplotypes

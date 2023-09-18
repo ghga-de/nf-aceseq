@@ -7,8 +7,9 @@ process CLUSTER_SEGMENTS {
         'docker://kubran/odcf_aceseqcalling:v3':'kubran/odcf_aceseqcalling:v3' }"
     
     input:
-    tuple val(meta), path(snp_update1), path(index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), path(haplogroups_chr23)
+    tuple val(meta), path(snp_update1), path(snp_update1_index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), path(haplogroups_chr23)
     each file(chrlenght)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path('*normal.txt')      , emit: clustered_segments   
@@ -21,7 +22,7 @@ process CLUSTER_SEGMENTS {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-
+    
     """
     tabix -f -s 1 -b 2 -e 3 --comment chromosome $segments_w_homodel
 
@@ -36,8 +37,8 @@ process CLUSTER_SEGMENTS {
         --min_num_SNPs  $params.min_num_SNPs \\
         --min_membership    $params.min_membership \\
         --min_distance  $params.min_distance \\
-        --blockPre	${prefix}.chr	\\
-        --blockSuf  haploblocks.tab   \\
+        --blockPre	${prefix}.chr   \\
+        --blockSuf  haploblocks.tab \\
         --newFile   ${prefix}_all_seg2.txt.gz \\
         --sex $sexfile \\
         --gcCovWidthFile  $gc_corrected \\

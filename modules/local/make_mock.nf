@@ -8,10 +8,11 @@ process MAKE_MOCK {
 
     input:
     tuple val(meta), path(x)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path("*.haploblocks.tab")          , emit: haploblock
-    tuple val(meta),val("chr23"), path("*.phased.vcf")  , emit: phased_vcf
+    tuple val(meta),val("${chr_prefix}23"), path("*23.phased.vcf")  , emit: phased_vcf
     tuple val(meta), path("*.sample_g.txt")             , emit: sample_g
 
     when:

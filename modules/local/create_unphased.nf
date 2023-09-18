@@ -9,6 +9,7 @@ process CREATE_UNPHASED {
     input:
     tuple val(meta), path(snp_positions)  , path(index)
     tuple path(dbsnp)                     , path(index)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path('*X.vcf')  , emit: x_unphased
@@ -31,7 +32,7 @@ process CREATE_UNPHASED {
       --columnName genotype \\
       --aColNameLineStart "#CHROM" | \\
       grep -v "^#" | \\
-        parseVcf.pl . ${prefix}.unphased_chr vcf
+        parseVcf.pl . ${prefix}.unphased_${chr_prefix} vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

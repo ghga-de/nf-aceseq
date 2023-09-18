@@ -18,7 +18,7 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
-chr_prefix     = Channel.value(params.chr_prefix)
+chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
 chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) 
                                                 : Channel.empty()   
@@ -148,7 +148,8 @@ workflow ACESEQ {
         ref, 
         chrlength,
         dbsnpsnv,
-        mapability
+        mapability,
+        chrprefix
     )
     ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
 
@@ -173,23 +174,23 @@ workflow ACESEQ {
 
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
-        ch_sample = sample_ch.join(MPILEUP_SNV_CNV_CALL.out.ch_sex) 
+        ch_sample = sample_ch.join(MPILEUP_SNV_CNV_CALL.out.ch_sex)
+        ch_sample = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.all_snp) 
         ch_sample.branch{
             male:  it[7].readLines().get(0) == "male"
-            female: it[7].readLines().get(0) == "female|klinefelter"
-            other: false}
+            female: it[7].readLines().get(0) == "female"
+            other: true}
             .set{sex}
 
         // Run phasing for female samples
         PHASING_X(
             sex.female,
-            MPILEUP_SNV_CNV_CALL.out.all_snp, 
             ref, 
             chrlength,
             beagle_ref,
             beagle_map,
             dbsnpsnv,
-            MPILEUP_SNV_CNV_CALL.out.ch_sex
+            chrprefix
         )
         ch_versions     = ch_versions.mix(PHASING_X.out.versions)
         snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_X.out.ch_snp_haplotypes)
@@ -198,20 +199,16 @@ workflow ACESEQ {
         // Run phasing for male samples
         PHASING_Y(
             sex.male,
-            MPILEUP_SNV_CNV_CALL.out.all_snp, 
             ref, 
             chrlength,
             beagle_ref,
             beagle_map,
             dbsnpsnv,
-            MPILEUP_SNV_CNV_CALL.out.ch_sex
+            chrprefix
         )
         ch_versions     = ch_versions.mix(PHASING_Y.out.versions)
         snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_Y.out.ch_snp_haplotypes)
         haploblocks_ch    = haploblocks_ch.mix(PHASING_Y.out.ch_haploblocks)
-
-        snp_haplotypes_ch.view()
-        haploblocks_ch.view()
 
         //
         // SUBWORKFLOW: NO_CONTROL_PHASING
@@ -225,7 +222,8 @@ workflow ACESEQ {
         // Run annotateCNA.pl and parseVcf.pl to generate X (if male) and Y unphased VCFs
         //CREATE_UNPHASED(
         //all_snp_ch,
-        //dbsnp
+        //dbsnp,
+        //chrprefix
         //)
         //unphased_x  = CREATE_UNPHASED.out.x_unphased
         //unphased_y  = CREATE_UNPHASED.out.y_unphased
@@ -242,7 +240,8 @@ workflow ACESEQ {
             MPILEUP_SNV_CNV_CALL.out.ch_sex,
             centromers,
             chrlength,
-            mapability
+            mapability,
+            chrprefix
         )
         ch_versions     = ch_versions.mix(BREAKPOINTS_SEGMENTS.out.versions)
 
@@ -272,6 +271,9 @@ workflow ACESEQ {
             centromers,
             cytobands
         )
+    }
+    else{
+        println "Only quality check is performed since runQualityCheckOnly is set to ${params.runQualityCheckOnly}"
     }
 
     //

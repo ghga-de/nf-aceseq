@@ -8,6 +8,7 @@ process GROUP_HAPLOTYPES {
 
     input:
     tuple val(meta) , val(intervals), path(phased)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path("*haploblocks.tab")  , emit: haplogroups
@@ -19,7 +20,8 @@ process GROUP_HAPLOTYPES {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_name = intervals == "chrX" ? "chr23" : intervals
+    def chr_suff      = chr_prefix == "chr" ? "" : "chr"
+    def interval_name = intervals == "${chr_prefix}X" ? "${chr_suff}${chr_prefix}23" : "${chr_suff}" + "${intervals}"
 
     """
     group_genotypes.py \\
