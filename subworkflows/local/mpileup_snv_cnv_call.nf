@@ -19,6 +19,7 @@ workflow MPILEUP_SNV_CNV_CALL {
     chrlength     // channel: [[chr, region], [chr, region], ...]
     dbsnp         // channel: [dbsnp, index]
     mappability   // channel: [mappability, index]
+    chr_prefix    // channel: val(chr|"")
 
     main:
     versions = Channel.empty()
@@ -71,7 +72,8 @@ workflow MPILEUP_SNV_CNV_CALL {
                 .set{combined_snp}
 
     MERGE_SNP(
-        combined_snp
+        combined_snp,
+        chr_prefix
     )
     versions  = versions.mix(MERGE_SNP.out.versions)
     all_snp = MERGE_SNP.out.snp
@@ -91,7 +93,8 @@ workflow MPILEUP_SNV_CNV_CALL {
 
     ESTIMATE_SEX(
         combined_cnv,
-        chrlength
+        chrlength,
+        chr_prefix
     )
     versions  = versions.mix(ESTIMATE_SEX.out.versions)
     ch_sex    = ESTIMATE_SEX.out.sex
@@ -121,9 +124,10 @@ workflow MPILEUP_SNV_CNV_CALL {
                 .annotated_cnv
                 .groupTuple()
                 .set{ch_anno_cnv}
-
+    
     MERGE_CNV (
-        ch_anno_cnv
+        ch_anno_cnv,
+        chr_prefix
     )
     versions  = versions.mix(MERGE_CNV.out.versions)
     all_cnv   = MERGE_CNV.out.cnv
