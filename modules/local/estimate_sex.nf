@@ -9,6 +9,7 @@ process ESTIMATE_SEX {
     input:
     tuple val(meta), val(intervals), path(cnv)
     each file(chrlenght)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path('*_sex.txt')        , emit: sex   
@@ -24,10 +25,10 @@ process ESTIMATE_SEX {
     if (meta.iscontrol == '1') {
         """
         getSex.R \\
-            --file_dataY ${prefix}.chrY.cnv.tab.gz \\
-            --file_dataX ${prefix}.chrX.cnv.tab.gz \\
+            --file_dataY ${prefix}.${chr_prefix}Y.cnv.tab.gz \\
+            --file_dataX ${prefix}.${chr_prefix}X.cnv.tab.gz \\
             --file_size $chrlenght \\
-            --cnv_files "${prefix}.chr*.cnv.tab.gz" \\
+            --cnv_files "${prefix}.${chr_prefix}*.cnv.tab.gz" \\
             --min_Y_ratio $params.min_Y_ratio \\
             --min_X_ratio $params.min_X_ratio \\
             --file_out ${prefix}_sex.txt

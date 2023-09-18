@@ -8,6 +8,7 @@ process EMBED_HAPLOTYPES {
 
     input:
     tuple val(meta) ,val(intervals), path(phased), path(unphased)
+    val(chr_prefix)
 
     output:
     tuple val(meta),val(intervals), path("*.phased.vcf")  , emit: phased_vcf 
@@ -19,7 +20,8 @@ process EMBED_HAPLOTYPES {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def interval_name = intervals == "chrX" ? "chr23" : intervals
+    def chr_suff      = chr_prefix == "chr" ? "" : "chr"
+    def interval_name = intervals == "${chr_prefix}X" ? "${chr_suff}${chr_prefix}23" : "${chr_suff}" + "${intervals}"
 
     """
     beagle_embed_haplotypes_vcf.py \\
