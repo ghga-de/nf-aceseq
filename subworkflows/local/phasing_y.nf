@@ -139,15 +139,16 @@ workflow PHASING_Y {
     versions = versions.mix(GROUP_HAPLOTYPES.out.versions)
 
     GROUP_HAPLOTYPES.out.haplogroups
-                        .join(haploblock_x)
                         .groupTuple()
+                        .join(haploblock_x)                    
                         .set{ch_haploblocks}
-                        
+                       
     // if sample is male phased_vcf_x will be used as mock otherwise it is already in phased_vcf
     EMBED_HAPLOTYPES.out.phased_vcf
                         .groupTuple()
                         .join(phased_vcf_x)
                         .set{phased_all}
+                        
     all_snp_ch = sample_ch.map {it -> tuple( it[0], it[8], it[9])}
     phased_all.map {it -> tuple( it[0], it[2], it[4])}
                 .join(all_snp_ch, by: [0])

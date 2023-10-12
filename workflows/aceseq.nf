@@ -70,7 +70,7 @@ include { INPUT_CHECK              } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CNV_CALL     } from '../subworkflows/local/mpileup_snv_cnv_call'
 include { PHASING_X                } from '../subworkflows/local/phasing_x'
 include { PHASING_Y                } from '../subworkflows/local/phasing_y'
-include { CORRECT_GC_BIAS          } from '../subworkflows/local/correct_gc_bias'
+include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
 include { BREAKPOINTS_SEGMENTS     } from '../subworkflows/local/breakpoints_segments'
 include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
 include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
@@ -154,15 +154,15 @@ workflow ACESEQ {
     ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
 
     //
-    // SUBWORKFLOW: CORRECT_GC_BIAS
+    // SUBWORKFLOW: PREPROCESSING
     //  
-    CORRECT_GC_BIAS(
+    PREPROCESSING(
         MPILEUP_SNV_CNV_CALL.out.all_cnv,
         rep_time,
         chrlength,
         gc_content
     )
-    ch_versions  = ch_versions.mix(CORRECT_GC_BIAS.out.versions)
+    ch_versions  = ch_versions.mix(PREPROCESSING.out.versions)
 
     if (!params.runQualityCheckOnly){
         //
@@ -192,7 +192,7 @@ workflow ACESEQ {
             dbsnpsnv,
             chrprefix
         )
-        ch_versions     = ch_versions.mix(PHASING_X.out.versions)
+        ch_versions       = ch_versions.mix(PHASING_X.out.versions)
         snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_X.out.ch_snp_haplotypes)
         haploblocks_ch    = haploblocks_ch.mix(PHASING_X.out.ch_haploblocks)
 
@@ -233,8 +233,8 @@ workflow ACESEQ {
         // SUBWORKFLOW: BREAKPOINTS_SEGMENTS: 
         //
         BREAKPOINTS_SEGMENTS(
-            CORRECT_GC_BIAS.out.windows_corrected,
-            CORRECT_GC_BIAS.out.qual_corrected,
+            PREPROCESSING.out.windows_corrected,
+            PREPROCESSING.out.qual_corrected,
             snp_haplotypes_ch,
             haploblocks_ch,
             MPILEUP_SNV_CNV_CALL.out.ch_sex,
@@ -254,7 +254,7 @@ workflow ACESEQ {
             BREAKPOINTS_SEGMENTS.out.ch_purity_ploidy,
             BREAKPOINTS_SEGMENTS.out.ch_segment_w_peaks,
             MPILEUP_SNV_CNV_CALL.out.ch_sex,
-            CORRECT_GC_BIAS.out.all_corrected,
+            PREPROCESSING.out.all_corrected,
             chrlength
         )
         ch_versions     = ch_versions.mix(PURITY_EVALUATION.out.versions)

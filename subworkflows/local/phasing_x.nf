@@ -149,7 +149,7 @@ workflow PHASING_X {
                 .set{phasedvcf_ch}
 
     phasedvcf_ch = phasedvcf_ch.map {it -> tuple( it[0], it[1], [], it[3], it[4])}
-    phasedvcf_ch.view()
+    
     //// haplotypes.sh ////
 
     //

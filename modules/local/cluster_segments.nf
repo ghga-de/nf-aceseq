@@ -7,14 +7,14 @@ process CLUSTER_SEGMENTS {
         'docker://kubran/odcf_aceseqcalling:v3':'kubran/odcf_aceseqcalling:v3' }"
     
     input:
-    tuple val(meta), path(snp_update1), path(snp_update1_index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), path(haplogroups_chr23)
+    tuple val(meta), path(snp_update1), path(snp_update1_index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), file(haplogroups_chr23)
     each file(chrlenght)
     val(chr_prefix)
 
     output:
-    tuple val(meta), path('*normal.txt')      , emit: clustered_segments   
+    tuple val(meta), path('*normal.txt')                                      , emit: clustered_segments   
     tuple val(meta), path('*all_seg_2.txt.gz'), path('*all_seg_2.txt.gz.tbi') , emit: snp_update2
-    path  "versions.yml"                      , emit: versions
+    path  "versions.yml"                                                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
