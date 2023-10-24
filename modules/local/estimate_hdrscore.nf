@@ -1,17 +1,20 @@
-process TAB_TO_CNV {
+process ESTIMATE_HDRSCORE {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_medium'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
 
     input:
-    tuple val(meta), path(purity_ploidy), path(cnv_params)
+    tuple val(meta) , path(json), path(txt_files), path(sexfile)
+    path(blacklist)
+    path(centromers)
+    path(cytobands)
 
     output:
-    tuple val(meta), path("*.json")  , emit: json 
-    path  "versions.yml"             , emit: versions
+    tuple val(meta), path("*.txt")        , emit: txt
+    path  "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,11 +24,14 @@ process TAB_TO_CNV {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    getFinalPurityPloidy.py \\
-        --pid   $prefix \\
-        --path  .  \\
-        --out   ${prefix}_parameter.json \\
-        --solutionFile  $purity_ploidy
+    estimateHRDScore.sh \\
+        -p $prefix \\
+        -i $json \\
+        -m $params.legacyMode \\
+        -b $blacklist \\
+        -s $sexfile \\
+        -c $centromers \\
+        -y $cytobands
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1,5 +1,5 @@
 //
-// BREAKPOINTS_SEGMENTS: RUN 
+// SEGMENTATION:
 //
 
 params.options = [:]
@@ -14,7 +14,7 @@ include { SEGMENTS_TO_DATA as SEGMENTS_TO_HOMODEL } from '../../modules/local/se
 include { SEGMENTS_TO_DATA as SEGMENTS_TO_SNP     } from '../../modules/local/segments_to_data.nf'     addParams( options: params.options )
 
 
-workflow BREAKPOINTS_SEGMENTS {
+workflow SEGMENTATION {
     take:
     gc_corr_win     // channel: [val(meta), path(cnv_corrected_win tab.gz)]
     gc_corr_qual    // channel: [val(meta), path(cnv_corrected_qual tab)]

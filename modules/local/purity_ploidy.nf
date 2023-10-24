@@ -1,20 +1,17 @@
-process PARSE_JSON {
+process PURITY_PLOIDY {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
 
     input:
-    tuple val(meta) , path(json), path(txt_files), path(sexfile)
-    path(blacklist)
-    path(centromers)
-    path(cytobands)
+    tuple val(meta), path(purity_ploidy), path(cnv_params)
 
     output:
-    tuple val(meta), path("*.txt"), emit: txt
-    path  "versions.yml"          , emit: versions
+    tuple val(meta), path("*.json")  , emit: json 
+    path  "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,14 +21,11 @@ process PARSE_JSON {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    estimateHRDScore.sh \\
-        -p $prefix \\
-        -i $json \\
-        -m $params.legacyMode \\
-        -b $blacklist \\
-        -s $sexfile \\
-        -c $centromers \\
-        -y $cytobands
+    getFinalPurityPloidy.py \\
+        --pid   $prefix \\
+        --path  .  \\
+        --out   ${prefix}_parameter.json \\
+        --solutionFile  $purity_ploidy
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

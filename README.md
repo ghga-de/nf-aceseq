@@ -11,7 +11,7 @@
 
 **nf-aceseq** is a bioinformatics best-practice analysis pipeline for ACEseq Allele-specific copy number estimation adapted from [**ODCF-OTP ACEseqWorkflow**](https://github.com/DKFZ-ODCF/ACEseqWorkflow).
 
-ACEseq (Allele-specific copy number estimation with whole genome sequencing) is a tool to estimate allele-specific copy numbers from human WGS data, and comes along with a variety of features:
+ACEseq (Allele-specific copy number estimation with whole genome sequencing) is a tool to estimate allele-specific copy numbers from human Whole Genome Sequencing data (>30X) using a tumor vs control paired data, and comes along with a variety of features:
 
 - GC/replication timing Bias correction
 - Quality check
@@ -22,6 +22,7 @@ ACEseq (Allele-specific copy number estimation with whole genome sequencing) is 
 
 For more information on theoretical part please refer to the orijinal documentation of the pipeline [here](https://aceseq.readthedocs.io/en/latest/index.html). 
 
+This workflow is not optimal to use with Whole Exome Sequencing data! 
 
 For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example.
 
@@ -36,18 +37,37 @@ On release, automated continuous integration tests run the pipeline on a full-si
 <!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
 The pipeline has 7 main steps: 
-1. SNV and CNV calling using mpileup
-2. Phasing
-3. GC bias correction
-4. Breakpoint estimation
-5. Plot and report production
-6. HDR estimation
-7. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+1. **SNV calling** using mpileup
+2. **Preprocessing** is part of quality control to correct biases in GC/replication timing
+3. **Phasing** using beagle5
+4. **Segmentation** with support of SV breakout inclusion. 
+5. **Purity-Ploidity prediction**, plot and report production
+6. **HDR estimation** as well as TAI and LST
+7. ([`MultiQC`](http://multiqc.info/)) is used to present QC for raw reads 
+
+## Running pipeline with different modules:
+
+--nocontrol
+If there is no control, automatically nocontrol workflow will be switched on. In order to use nocontrol workflow, sex must be defined in metadata. 
+
+--runWithFakeControl
+
+
+--runQualityCheckOnly
+runs SNV calling and preprocessing and quites
+
+--allowMissingSVFile
+Allows missing SV files, otherwise as input SV must be provided
+
+--runWithCrest
+
+
+--estimatesex
+If it is false, sex estimation will not run and user given sex is used. To do so, Metadata must include sex
 
 ## How to prepare files
 
 This workflow uses Beagle5 for imputing. Beagle uses 2 types of reference files: 
-
 
 - Preperation of generic maps:
 

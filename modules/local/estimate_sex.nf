@@ -22,9 +22,10 @@ process ESTIMATE_SEX {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (meta.iscontrol == '1') {
-        """
-        getSex.R \\
+    if (params.estimatesex) {
+        if (meta.iscontrol == '1'){
+            """
+            getSex.R \\
             --file_dataY ${prefix}.${chr_prefix}Y.cnv.tab.gz \\
             --file_dataX ${prefix}.${chr_prefix}X.cnv.tab.gz \\
             --file_size $chrlenght \\
@@ -33,11 +34,29 @@ process ESTIMATE_SEX {
             --min_X_ratio $params.min_X_ratio \\
             --file_out ${prefix}_sex.txt
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-        END_VERSIONS
-        """
+            cat <<-END_VERSIONS > versions.yml
+            "${task.process}":
+                r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+            END_VERSIONS
+            """
+        }
+        else{
+            if (meta.sex){
+                """
+                echo $meta.sex > ${prefix}_sex.txt
+
+                cat <<-END_VERSIONS > versions.yml
+                "${task.process}":
+                    r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+                END_VERSIONS
+                """
+            }
+            else
+            {
+                echo "Gender/Sex must be spesified for nocontrol runs!"
+                exit 2
+            }
+        }
     }
     else {
         if (meta.sex){
@@ -50,11 +69,9 @@ process ESTIMATE_SEX {
             END_VERSIONS
             """
         }
-        else
-        {
-            echo "Gender/Sex must be spesified for nocontrol runs!"
-            exit 2
+        else{
+                echo "Gender/Sex must be spesified in metadata not to estimatesex from sample data!"
+                exit 2
         }
-
     }
 }

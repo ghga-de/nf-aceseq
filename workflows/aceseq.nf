@@ -67,11 +67,11 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK              } from '../subworkflows/local/input_check'
-include { MPILEUP_SNV_CNV_CALL     } from '../subworkflows/local/mpileup_snv_cnv_call'
+include { SNV_CALLING              } from '../subworkflows/local/snv_calling'
 include { PHASING_X                } from '../subworkflows/local/phasing_x'
 include { PHASING_Y                } from '../subworkflows/local/phasing_y'
 include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
-include { BREAKPOINTS_SEGMENTS     } from '../subworkflows/local/breakpoints_segments'
+include { SEGMENTATION             } from '../subworkflows/local/segmentation'
 include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
 include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
 
@@ -141,9 +141,9 @@ workflow ACESEQ {
                             .set{sample_ch}
 
     //
-    // SUBWORKFLOW: MPILEUP_SNV_CNV_CALL: Call SNVs
+    // SUBWORKFLOW: SNV_CALLING: Call SNVs
     //
-    MPILEUP_SNV_CNV_CALL(
+    SNV_CALLING(
         sample_ch, 
         ref, 
         chrlength,
@@ -151,13 +151,13 @@ workflow ACESEQ {
         mapability,
         chrprefix
     )
-    ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
+    ch_versions    = ch_versions.mix(SNV_CALLING.out.versions)
 
     //
     // SUBWORKFLOW: PREPROCESSING
     //  
     PREPROCESSING(
-        MPILEUP_SNV_CNV_CALL.out.all_cnv,
+        SNV_CALLING.out.all_cnv,
         rep_time,
         chrlength,
         gc_content
@@ -174,8 +174,8 @@ workflow ACESEQ {
 
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
-        ch_sample = sample_ch.join(MPILEUP_SNV_CNV_CALL.out.ch_sex)
-        ch_sample = ch_sample.join(MPILEUP_SNV_CNV_CALL.out.all_snp) 
+        ch_sample = sample_ch.join(SNV_CALLING.out.ch_sex)
+        ch_sample = ch_sample.join(SNV_CALLING.out.all_snp) 
         ch_sample.branch{
             male:  it[7].readLines().get(0) == "male"
             female: it[7].readLines().get(0) == "female"
@@ -230,30 +230,29 @@ workflow ACESEQ {
         //versions = versions.mix(CREATE_UNPHASED.out.versions)
 
         //
-        // SUBWORKFLOW: BREAKPOINTS_SEGMENTS: 
+        // SUBWORKFLOW: SEGMENTATION: 
         //
-        BREAKPOINTS_SEGMENTS(
+        SEGMENTATION(
             PREPROCESSING.out.windows_corrected,
             PREPROCESSING.out.qual_corrected,
             snp_haplotypes_ch,
             haploblocks_ch,
-            MPILEUP_SNV_CNV_CALL.out.ch_sex,
+            SNV_CALLING.out.ch_sex,
             centromers,
             chrlength,
             mapability,
             chrprefix
         )
-        ch_versions     = ch_versions.mix(BREAKPOINTS_SEGMENTS.out.versions)
+        ch_versions     = ch_versions.mix(SEGMENTATION.out.versions)
 
         //
         // SUBWORKFLOW: PURITY_EVALUATION: 
         //
         PURITY_EVALUATION(
-            BREAKPOINTS_SEGMENTS.out.ch_sv_points,
-            BREAKPOINTS_SEGMENTS.out.ch_all_snp_update3,
-            BREAKPOINTS_SEGMENTS.out.ch_purity_ploidy,
-            BREAKPOINTS_SEGMENTS.out.ch_segment_w_peaks,
-            MPILEUP_SNV_CNV_CALL.out.ch_sex,
+            SEGMENTATION.out.ch_clustered_segments,
+            SEGMENTATION.out.ch_sv_points,
+            SEGMENTATION.out.ch_all_snp_update3,
+            SNV_CALLING.out.ch_sex,
             PREPROCESSING.out.all_corrected,
             chrlength
         )
@@ -267,7 +266,7 @@ workflow ACESEQ {
             PURITY_EVALUATION.out.json_report,
             PURITY_EVALUATION.out.hdr_files,
             blacklist,
-            MPILEUP_SNV_CNV_CALL.out.ch_sex,
+            SNV_CALLING.out.ch_sex,
             centromers,
             cytobands
         )

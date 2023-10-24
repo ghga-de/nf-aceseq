@@ -14,6 +14,7 @@ process CLUSTER_SEGMENTS {
     output:
     tuple val(meta), path('*normal.txt')                                      , emit: clustered_segments   
     tuple val(meta), path('*all_seg_2.txt.gz'), path('*all_seg_2.txt.gz.tbi') , emit: snp_update2
+    tuple val(meta), path('*.pdf')
     path  "versions.yml"                                                       , emit: versions
 
     when:

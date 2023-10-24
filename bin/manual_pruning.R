@@ -409,7 +409,7 @@ if (clustering_YN == "yes") {
 	clusterPlot <- ggplot( data.frame(cluster_matrix), aes(log2.tcnMean, dhMax, col=as.character(CM$cluster) ) )  +
       geom_point(size=1.7, alpha=0.8) +
       geom_point(data=data.frame(CM[['centers']]), aes(log2.tcnMean, dhMax), col='red', pch=3) +
-      geom_point(data=data.frame(t(data.frame(centerMain))), aes(log2.tcnMean, dhMax), col='orange', pch=9, size = 4) +
+      ##geom_point(data=data.frame(t(data.frame(centerMain))), aes(log2.tcnMean, dhMax), col='orange', pch=9, size = 4) +
       geom_vline(xintercept=c(covRightNorm, covLeftNorm),size=0.4, col="black", alpha=0.8) +
       geom_vline(xintercept=c(covRightFullNorm, covLeftFullNorm),size=0.4, col="red", alpha=0.8) +
         scale_color_manual(values=c(col, "grey"), name="cluster", na.translate=F )

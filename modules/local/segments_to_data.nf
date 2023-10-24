@@ -12,7 +12,7 @@ process SEGMENTS_TO_DATA {
     
     output:
     tuple val(meta), path("*seg_${update}.txt.gz"), path("*seg_${update}.txt.gz.tbi"), emit: all_seg
-    path  "versions.yml"                          , emit: versions
+    path  "versions.yml"                                                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

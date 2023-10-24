@@ -1,5 +1,5 @@
 //
-// SNVCALL: RUN SAMTOOLS MPILEUP by intervals
+// SNV_CALLING: RUN SAMTOOLS MPILEUP by intervals
 //
 
 params.options = [:]
@@ -12,7 +12,7 @@ include { ANNOTATE_CNV     } from '../../modules/local/annotate_cnv.nf'         
 include { MERGE_CNV        } from '../../modules/local/merge_cnv.nf'               addParams( options: params.options )
 
 
-workflow MPILEUP_SNV_CNV_CALL {
+workflow SNV_CALLING {
     take:
     sample_ch     // channel: [val(meta), tumor,tumor_bai, control, control_bai, tumorname, controlname]
     ref           // channel: [path(fasta), path(fai)]
@@ -85,6 +85,7 @@ workflow MPILEUP_SNV_CNV_CALL {
     //
     // Run getSex.R per cnv file
     // combine cnvs according to meta id
+    // If there is no control or params.estimatesex if turned off, user defined sex data will be used. 
     WIN_GENERATOR
                 .out
                 .cnv

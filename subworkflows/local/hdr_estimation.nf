@@ -3,7 +3,7 @@
 //
 
 params.options = [:]
-include { PARSE_JSON       } from '../../modules/local/parse_json.nf'              addParams( options: params.options )
+include { ESTIMATE_HDRSCORE       } from '../../modules/local/estimate_hdrscore.nf'              addParams( options: params.options )
 
 workflow HDR_ESTIMATION {
     take:
@@ -19,17 +19,17 @@ workflow HDR_ESTIMATION {
     versions = Channel.empty()
 
     //
-    // MODULE:PARSE_JSON
+    // MODULE:ESTIMATE_HDRSCORE
     //
     // RUN parseJson.py
-   input_ch =  json_report.join(hdr_files)
-    PARSE_JSON(
+    input_ch =  json_report.join(hdr_files)
+    ESTIMATE_HDRSCORE(
         input_ch.join(sexfile),
         blacklist,
         centromers,
         cytobands
     )
-    versions  = versions.mix(PARSE_JSON.out.versions) 
+    versions  = versions.mix(ESTIMATE_HDRSCORE.out.versions) 
 
     emit:
     versions
