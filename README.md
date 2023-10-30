@@ -19,6 +19,7 @@ ACEseq (Allele-specific copy number estimation with whole genome sequencing) is 
 - Automated estimation of ploidy and tumor cell content
 - HRD/TAI/LST score estimation
 - With/without matched control processing
+- Replacing bad control
 
 For more information on theoretical part please refer to the orijinal documentation of the pipeline [here](https://aceseq.readthedocs.io/en/latest/index.html). 
 
@@ -47,20 +48,34 @@ The pipeline has 7 main steps:
 
 ## Running pipeline with different modules:
 
---nocontrol
-If there is no control, automatically nocontrol workflow will be switched on. In order to use nocontrol workflow, sex must be defined in metadata. 
+- Running with no control samples or with bad control samples
 
---runWithFakeControl
+--runWithFakeControl true
+To be able to run with fake control ACE-Seq pipeline must be already processed with some other tumor-normal pairs. Then, its coverage profile can be used for normalization for nocontrol or bad control samples. In this case, no BAFs can be used from a matching control sample, and also patients sex would not be inferred. In order to use this functionality, --fake_control and --fake_control_prefix must be defined.
 
+For the configuraton, the path and the prefix to the control coverage profile for a male or a female patient must be matched: fake_control file directory must be organized such that: {fake_control_prefix}.chr*.cnv.anno.tab.gz for hg38 or {fake_control_prefix}.*.cnv.anno.tab.gz for hg37. For female samples chromosome list should be 1-22,X and for male samples chromosome list should be 1-22,X,Y.  
 
---runQualityCheckOnly
+If there is no control, **automatically** nocontrol workflow will be switched on. In order to use nocontrol workflow, sex must be defined in metadata. 
+
+Nocontrol behaviour of this workflow uses a fake control. In order to use this functionality, --runWithFakeControl must be true --fake_control and --fake_control_prefix must be defined.
+
+- Running only for Quality Control
+
+--runQualityCheckOnly true
 runs SNV calling and preprocessing and quites
 
---allowMissingSVFile
+- Running with or without Structural Variants SVs
+
+In order to integrate SV processing --svfile file path must be provided
+
+--allowMissingSVFile false
 Allows missing SV files, otherwise as input SV must be provided
 
 --runWithCrest
 
+- Sex estimation
+
+Sex is an important part of this workflow, if there is no control file, sex cannot be estimated through pipeline and thus must be given through samplesheet. 
 
 --estimatesex
 If it is false, sex estimation will not run and user given sex is used. To do so, Metadata must include sex

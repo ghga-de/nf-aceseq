@@ -12,7 +12,8 @@ include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'  
 include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'          addParams( options: params.options )
 include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'        addParams( options: params.options )
 include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'           addParams( options: params.options )
-include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options ) 
+include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'           addParams( options: params.options )
+include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options )
 
 
 workflow PHASING_X {
@@ -44,18 +45,54 @@ workflow PHASING_X {
         .set { combined_inputs_female }
 
     combined_inputs_female = combined_inputs_female.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[10])}
-    //
-    // MODULE:BCFTOOLS_MPILEUP 
-    //
-    // RUN bcftools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
-    // in OTP running pipeline samtools mpileup is used!
-    BCFTOOLS_MPILEUP (
-        combined_inputs_female, 
-        ref
-    )
-    versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
-    ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
+
+    if (params.runWithFakeControl){
+        println "Running with fake control is in process -- create unphased genotypes"
+        //// estimateGenotypes.sh  //////
+
+        //
+        // MODULE: GET_GENOTYPES
+        //
+        sample_ch.map{it -> tuple( it[0],it[8],it[9])}
+                    .set{all_snp}
+        GET_GENOTYPES(
+            all_snp
+        )
+        versions = versions.mix(GET_GENOTYPES.out.versions)
+
+        //// createUnphasedFiles.sh /////
+
+        CREATE_UNPHASED(
+            GET_GENOTYPES.out.fake_snp,
+            dbsnp,
+            chr_prefix
+        )
+        unphased  = CREATE_UNPHASED.out.unphased
+        versions = versions.mix(CREATE_UNPHASED.out.versions)
         
+        unphased_ch = unphased.transpose()       
+        unphased_ch.combine(intervals_ch)
+            .filter{it[1].name.contains("unphased_"+it[2]+".")}
+            .map{it -> tuple(it[2],it[0], it[1])}
+            .set{unphased}
+        
+        ch_unphased = ch_unphased.mix(unphased)
+
+    }
+    else{
+        //
+        // MODULE:BCFTOOLS_MPILEUP 
+        //
+        // RUN bcftools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
+        // in OTP running pipeline samtools mpileup is used!
+        BCFTOOLS_MPILEUP (
+            combined_inputs_female, 
+            ref
+        )
+        versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
+        ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
+    }
+    
     //
     // MODULE:CREATE_FAKE_SAMPLES 
     //
@@ -98,9 +135,9 @@ workflow PHASING_X {
                 .set{beagle_ch}
 
     beagle_ch.join(CREATE_FAKE_SAMPLES.out.unphased_vcf, by:[1])
+             .map{it -> tuple(it[3], it[0], it[4], it[1], it[2])}
              .set{beagle_in_ch}
     
-
     //
     // MODULE:BEAGLE 
     // 

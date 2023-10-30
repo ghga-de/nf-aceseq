@@ -10,6 +10,7 @@ include { MERGE_SNP        } from '../../modules/local/merge_snp.nf'            
 include { ESTIMATE_SEX     } from '../../modules/local/estimate_sex.nf'            addParams( options: params.options )
 include { ANNOTATE_CNV     } from '../../modules/local/annotate_cnv.nf'            addParams( options: params.options )
 include { MERGE_CNV        } from '../../modules/local/merge_cnv.nf'               addParams( options: params.options )
+include { FAKE_CONTROL     } from '../../modules/local/fake_control.nf'            addParams( options: params.options )
 
 
 workflow SNV_CALLING {
@@ -20,6 +21,7 @@ workflow SNV_CALLING {
     dbsnp         // channel: [dbsnp, index]
     mappability   // channel: [mappability, index]
     chr_prefix    // channel: val(chr|"")
+    fake_control  // channel: [dir with path(.anno.cnv.tab.gz), path(.anno.cnv.tab.gz.tabi)...]
 
     main:
     versions = Channel.empty()
@@ -57,27 +59,6 @@ workflow SNV_CALLING {
     )
     versions  = versions.mix(WIN_GENERATOR.out.versions) 
 
-    //// snvMergeFilter.sh ////
-
-    //
-    // MERGE_SNP: Merge and filter SNP positions
-    //
-    // Runs merge_and_filter_snp.py
-
-    // Group interval SNP tab files according to meta id
-    WIN_GENERATOR
-                .out
-                .snp
-                .groupTuple()
-                .set{combined_snp}
-
-    MERGE_SNP(
-        combined_snp,
-        chr_prefix
-    )
-    versions  = versions.mix(MERGE_SNP.out.versions)
-    all_snp = MERGE_SNP.out.snp
-
     ///// vcfAnno.sh ////
 
     //
@@ -111,20 +92,53 @@ workflow SNV_CALLING {
     )
     versions  = versions.mix(ANNOTATE_CNV.out.versions)
 
-    //// cnvMergeFilter.sh ////
-
-    /////////////////// NOTE: replaceControl.sh is not implemented. This would be discussed! ///////////////////////
-    //
-    // MODULE: MERGE_CNV
-    //
-    // Runs merge_and_filter_cnv.py
-    
     // combine cnvs according to meta id
     ANNOTATE_CNV
                 .out
                 .annotated_cnv
                 .groupTuple()
                 .set{ch_anno_cnv}
+
+    // Runs only for no-control samples with defined params.fake_control !
+
+    //// replaceControl.sh ///// 
+    //
+    // MODULE: FAKE_CONTROL
+    //
+    if (params.runWithFakeControl) {
+
+        println "Running with fake control is in process -- fake control replacement"
+
+        // match fake control with bad control 
+        fake_control
+            .combine(intervals_ch)
+            .filter{it[0].name.contains("."+ it[1]+".")}
+            .map{it -> tuple(it[0], it[1])}
+            .set{fake_control_ch}
+   
+        input_ch = ANNOTATE_CNV.out.tmp_cnv.join(fake_control_ch, by:1) 
+        input_ch.map{it -> tuple(it[1], it[0],it[2],it[3])}
+                .set{fake_sample}
+        
+        FAKE_CONTROL(
+            fake_sample
+        )
+        versions  = versions.mix(FAKE_CONTROL.out.versions)
+
+        // combine cnvs according to meta id
+        FAKE_CONTROL
+                .out
+                .new_cnp
+                .groupTuple()
+                .set{ch_anno_cnv}
+    }
+
+    //// cnvMergeFilter.sh ////
+
+    //
+    // MODULE: MERGE_CNV
+    //
+    // Runs merge_and_filter_cnv.py
     
     MERGE_CNV (
         ch_anno_cnv,
@@ -132,6 +146,27 @@ workflow SNV_CALLING {
     )
     versions  = versions.mix(MERGE_CNV.out.versions)
     all_cnv   = MERGE_CNV.out.cnv
+
+        //// snvMergeFilter.sh ////
+
+    //
+    // MERGE_SNP: Merge and filter SNP positions
+    //
+    // Runs merge_and_filter_snp.py
+
+    // Group interval SNP tab files according to meta id
+    WIN_GENERATOR
+                .out
+                .snp
+                .groupTuple()
+                .set{combined_snp}
+
+    MERGE_SNP(
+        combined_snp,
+        chr_prefix
+    )
+    versions  = versions.mix(MERGE_SNP.out.versions)
+    all_snp = MERGE_SNP.out.snp
 
     emit:
     versions
