@@ -12,8 +12,9 @@ process ANNOTATE_CNV {
     tuple path(mappability)          , path(index)
 
     output:
-    tuple val(meta), path('*.cnv.anno.tab.gz')  , emit: annotated_cnv
-    path  "versions.yml"                        , emit: versions
+    tuple val(meta), path('*.cnv.anno.tab.gz')                  , emit: annotated_cnv
+    tuple val(meta), val(intervals), path('*.cnv.anno.tab.gz')  , emit: tmp_cnv
+    path  "versions.yml"                                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

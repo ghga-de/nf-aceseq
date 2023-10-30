@@ -16,6 +16,17 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
+fake_control = Channel.empty()
+// If no control case is active, check for existance of fake controls
+if (params.runWithFakeControl){
+    if (params.fake_control){
+        fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true )
+    }
+    else{
+        exit 1, 'To activate runWithFakeControl fake_control_prefix and fake_control file directory must be defined!'
+    }  
+}
+
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
@@ -68,12 +79,12 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 include { INPUT_CHECK              } from '../subworkflows/local/input_check'
 include { SNV_CALLING              } from '../subworkflows/local/snv_calling'
-include { PHASING_X                } from '../subworkflows/local/phasing_x'
-include { PHASING_Y                } from '../subworkflows/local/phasing_y'
 include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
 include { SEGMENTATION             } from '../subworkflows/local/segmentation'
 include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
 include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
+include { PHASING_X                } from '../subworkflows/local/phasing_x'
+include { PHASING_Y                } from '../subworkflows/local/phasing_y'
 
 
 /*
@@ -149,7 +160,8 @@ workflow ACESEQ {
         chrlength,
         dbsnpsnv,
         mapability,
-        chrprefix
+        chrprefix,
+        fake_control
     )
     ch_versions    = ch_versions.mix(SNV_CALLING.out.versions)
 
@@ -165,13 +177,14 @@ workflow ACESEQ {
     ch_versions  = ch_versions.mix(PREPROCESSING.out.versions)
 
     if (!params.runQualityCheckOnly){
-        //
-        // SUBWORKFLOW: PHASING: Call mpileup and beagle
-        //
 
         snp_haplotypes_ch = Channel.empty()
         haploblocks_ch    = Channel.empty()
-
+        
+        //
+        // SUBWORKFLOW: PHASING: Call mpileup and beagle
+        //
+            
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
         ch_sample = sample_ch.join(SNV_CALLING.out.ch_sex)
@@ -209,26 +222,7 @@ workflow ACESEQ {
         ch_versions     = ch_versions.mix(PHASING_Y.out.versions)
         snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_Y.out.ch_snp_haplotypes)
         haploblocks_ch    = haploblocks_ch.mix(PHASING_Y.out.ch_haploblocks)
-
-        //
-        // SUBWORKFLOW: NO_CONTROL_PHASING
-        //
-        //// This part is not clear yet ////////////
-        //// createUnphasedFiles.sh /////
-    
-        //
-        // MODULE: CREATE_UNPHASED
-        //
-        // Run annotateCNA.pl and parseVcf.pl to generate X (if male) and Y unphased VCFs
-        //CREATE_UNPHASED(
-        //all_snp_ch,
-        //dbsnp,
-        //chrprefix
-        //)
-        //unphased_x  = CREATE_UNPHASED.out.x_unphased
-        //unphased_y  = CREATE_UNPHASED.out.y_unphased
-        //versions = versions.mix(CREATE_UNPHASED.out.versions)
-
+        
         //
         // SUBWORKFLOW: SEGMENTATION: 
         //

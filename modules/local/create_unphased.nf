@@ -1,20 +1,19 @@
 process CREATE_UNPHASED {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
     'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta), path(snp_positions)  , path(index)
-    tuple path(dbsnp)                     , path(index)
+    tuple val(meta), path(fake_snp), path(index)
+    tuple path(dbsnp), path(index)
     val(chr_prefix)
 
     output:
-    tuple val(meta), path('*X.vcf')  , emit: x_unphased
-    tuple val(meta), path('*Y.vcf')  , emit: y_unphased 
-    path  "versions.yml"             , emit: versions
+    tuple val(meta), path('*.vcf')  , emit: unphased
+    path  "versions.yml"            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,7 +24,7 @@ process CREATE_UNPHASED {
 
     """
     zcat $dbsnp | annotate_vcf.pl \\
-      -a - -b $snp_positions \\
+      -a - -b $fake_snp \\
       --bFileType vcflike \\
       --chromXtr X:23 \\
       --chromYtr Y:24 \\

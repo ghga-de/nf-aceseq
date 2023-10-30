@@ -8,7 +8,7 @@ process BEAGLE5_BEAGLE {
         'quay.io/biocontainers/beagle:5.2_21Apr21.304--hdfd78af_0' }"
 
     input:
-    tuple val(intervals),path(refpanel),path(genmap),val(meta),path(vcf)
+    tuple val(meta),val(intervals),path(vcf),path(refpanel),path(genmap)
 
     output:
     tuple val(meta),val(intervals), path("*.vcf.gz")  , emit: vcf

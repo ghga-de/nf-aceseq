@@ -20,10 +20,11 @@ process MERGE_CNV {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix_in = params.fake_control_prefix ? "${prefix}.tmp" : "${prefix}"
 
     """
     merge_and_filter_cnv.py \\
-        --inputpath "${prefix}.${chr_prefix}" \\
+        --inputpath "${prefix_in}.${chr_prefix}" \\
         --inputsuffix ".cnv.anno.tab.gz" \\
         --output ${prefix}.cnv.tab.gz \\
         --coverage $params.cnv_min_coverage \\

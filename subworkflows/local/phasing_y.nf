@@ -13,7 +13,8 @@ include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'  
 include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'          addParams( options: params.options )
 include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'        addParams( options: params.options )
 include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'           addParams( options: params.options )
-include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options ) 
+include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'           addParams( options: params.options )
+include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options )
 
 
 workflow PHASING_Y {
@@ -30,6 +31,8 @@ workflow PHASING_Y {
     versions     = Channel.empty()
     ch_unphased  = Channel.empty()
 
+    ////////
+
     // Combine intervals with samples to create 'interval x sample' number of parallel run
     intervals  = chrlength.splitCsv(sep: '\t', by:1)
 
@@ -43,26 +46,66 @@ workflow PHASING_Y {
         .combine(intervals_ch)
         .set { combined_inputs_male }
     combined_inputs_male = combined_inputs_male.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[10])} 
-    //
-    // MODULE:BCFTOOLS_MPILEUP 
-    //
-    // RUN samtools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
-    BCFTOOLS_MPILEUP (
-        combined_inputs_male, 
-        ref
-    )
-    versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
-    ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
 
+    if (params.runWithFakeControl){
+        println "Running with fake control is in process -- create unphased genotypes"
+        //// estimateGenotypes.sh  //////
+
+        //
+        // MODULE: GET_GENOTYPES
+        //
+        sample_ch.map{it -> tuple( it[0],it[8],it[9])}
+                    .set{all_snp}
+        GET_GENOTYPES(
+            all_snp
+        )
+        versions = versions.mix(GET_GENOTYPES.out.versions)
+
+        //// createUnphasedFiles.sh /////
+
+        CREATE_UNPHASED(
+            GET_GENOTYPES.out.fake_snp,
+            dbsnp,
+            chr_prefix
+        )
+        unphased  = CREATE_UNPHASED.out.unphased
+        versions = versions.mix(CREATE_UNPHASED.out.versions)
+        
+        unphased_ch = unphased.transpose()       
+        unphased_ch.combine(intervals_ch)
+            .filter{it[1].name.contains("unphased_"+it[2]+".")}
+            .map{it -> tuple(it[0],it[2],it[1])}
+            .set{unphased}
+        
+        ch_unphased = ch_unphased.mix(unphased)
+
+    }
+    else{
+
+        //
+        // MODULE:BCFTOOLS_MPILEUP 
+        //
+        // RUN samtools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
+        BCFTOOLS_MPILEUP (
+            combined_inputs_male, 
+            ref
+        )
+        versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
+        ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
+
+    }
+    
     // Prepare moch haploblock file for chrX
     tmp = combined_inputs_male.map {it -> tuple( it[0], it[1])}
+
     MAKE_MOCK(
         tmp,
         chr_prefix
     )
     haploblock_x = MAKE_MOCK.out.haploblock
     phased_vcf_x = MAKE_MOCK.out.phased_vcf
-        
+    
+    ch_unphased.view()
     //
     // MODULE:CREATE_FAKE_SAMPLES 
     //
@@ -107,6 +150,7 @@ workflow PHASING_Y {
                 .map{it -> tuple(it[1], it[0], it[2])}
                 .set{beagle_ch}
     beagle_ch.join(CREATE_FAKE_SAMPLES.out.unphased_vcf, by:[1])
+             .map{it -> tuple(it[3], it[0], it[4], it[1], it[2])}
              .set{beagle_in_ch} 
 
     BEAGLE5_BEAGLE(
