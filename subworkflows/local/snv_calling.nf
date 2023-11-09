@@ -15,7 +15,7 @@ include { FAKE_CONTROL     } from '../../modules/local/fake_control.nf'         
 
 workflow SNV_CALLING {
     take:
-    sample_ch     // channel: [val(meta), tumor,tumor_bai, control, control_bai, tumorname, controlname]
+    ch_sample     // channel: [val(meta), tumor,tumor_bai, control, control_bai]
     ref           // channel: [path(fasta), path(fai)]
     chrlength     // channel: [[chr, region], [chr, region], ...]
     dbsnp         // channel: [dbsnp, index]
@@ -30,7 +30,7 @@ workflow SNV_CALLING {
     intervals  = chrlength.splitCsv(sep: '\t', by:1)
     intervals.take(24)
             .set{intervals_ch}
-    sample_ch
+    ch_sample
             .combine(intervals_ch)
             .set { combined_inputs }
 
@@ -41,7 +41,6 @@ workflow SNV_CALLING {
     //
     // RUN samtools mpileup to call variants. This process is scattered by chr intervals
     // If there is no control bam file samtools runs only for tumor automatically. 
-    combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[7])} 
 
     SAMTOOLS_MPILEUP (
         combined_inputs, 
@@ -105,7 +104,7 @@ workflow SNV_CALLING {
     //
     // MODULE: FAKE_CONTROL
     //
-    if (params.runWithFakeControl) {
+    if (params.fake_control) {
 
         println "Running with fake control is in process -- fake control replacement"
 

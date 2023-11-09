@@ -22,14 +22,14 @@ process ADD_CREST {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (!params.allowMissingSVFile && svpoints) {
+    if (!meta.missingsv) {
         """
         PSCBSgabs_plus_CRESTpoints.py \\
             --crest_deldupinv $crest_deldupinv    \\
             --crest_tx $crest_transloc  \\
             --known_segments    $knownsegments \\
-            --output    ${prefix}_breakpoints2.txt \\
-            --sv_out    ${prefix}_sv_points2.txt \\
+            --output    ${prefix}_sv_breakpoints2.txt \\
+            --sv_out    ${prefix}_sv_sv_points2.txt \\
             --DDI_length    $params.min_DDI_length
 
         cat <<-END_VERSIONS > versions.yml

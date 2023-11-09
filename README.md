@@ -50,7 +50,6 @@ The pipeline has 7 main steps:
 
 - Running with no control samples or with bad control samples
 
---runWithFakeControl true
 To be able to run with fake control ACE-Seq pipeline must be already processed with some other tumor-normal pairs. Then, its coverage profile can be used for normalization for nocontrol or bad control samples. In this case, no BAFs can be used from a matching control sample, and also patients sex would not be inferred. In order to use this functionality, --fake_control and --fake_control_prefix must be defined.
 
 For the configuraton, the path and the prefix to the control coverage profile for a male or a female patient must be matched: fake_control file directory must be organized such that: {fake_control_prefix}.chr*.cnv.anno.tab.gz for hg38 or {fake_control_prefix}.*.cnv.anno.tab.gz for hg37. For female samples chromosome list should be 1-22,X and for male samples chromosome list should be 1-22,X,Y.  
@@ -67,9 +66,6 @@ runs SNV calling and preprocessing and quites
 - Running with or without Structural Variants SVs
 
 In order to integrate SV processing --svfile file path must be provided
-
---allowMissingSVFile false
-Allows missing SV files, otherwise as input SV must be provided
 
 --runWithCrest
 
