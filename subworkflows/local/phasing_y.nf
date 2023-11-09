@@ -19,7 +19,7 @@ include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'   
 
 workflow PHASING_Y {
     take:
-    sample_ch     // channel: [val(meta), tumor, tumor_bai, control, control_bai, tumorname, controlname, sex_file, all_snp_ch, all_snp_ch_index]
+    sample_ch     // channel: [val(meta), tumor, tumor_bai, control, control_bai, sex_file, all_snp_ch, all_snp_ch_index]
     ref           // channel: [path(fasta), path(fai)]
     chrlength     // channel: [[chr, region], [chr, region], ...]
     beagle_ref    // channel: directory
@@ -45,8 +45,10 @@ workflow PHASING_Y {
     sample_ch
         .combine(intervals_ch)
         .set { combined_inputs_male }
-    combined_inputs_male = combined_inputs_male.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[10])} 
+    combined_inputs_male = combined_inputs_male.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[8])} 
 
+    sample_ch.map{it -> tuple( it[0],it[6],it[7])}
+                    .set{all_snp}
     if (params.runWithFakeControl){
         println "Running with fake control is in process -- create unphased genotypes"
         //// estimateGenotypes.sh  //////
@@ -54,8 +56,7 @@ workflow PHASING_Y {
         //
         // MODULE: GET_GENOTYPES
         //
-        sample_ch.map{it -> tuple( it[0],it[8],it[9])}
-                    .set{all_snp}
+
         GET_GENOTYPES(
             all_snp
         )
@@ -193,9 +194,8 @@ workflow PHASING_Y {
                         .join(phased_vcf_x)
                         .set{phased_all}
                         
-    all_snp_ch = sample_ch.map {it -> tuple( it[0], it[8], it[9])}
     phased_all.map {it -> tuple( it[0], it[2], it[4])}
-                .join(all_snp_ch, by: [0])
+                .join(all_snp, by: [0])
                 .set{phasedvcf_ch}
     
     //// haplotypes.sh ////
@@ -214,7 +214,7 @@ workflow PHASING_Y {
     // 
     // MODULE: CREATE_BAF_PLOTS
     //
-    sexfile = sample_ch.map {it -> tuple( it[0], it[7])}
+    sexfile = sample_ch.map {it -> tuple( it[0], it[5])}
     CREATE_BAF_PLOTS(
         ch_snp_haplotypes.join(sexfile),
         chrlength

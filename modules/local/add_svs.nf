@@ -9,7 +9,7 @@ process ADD_SVS {
         'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
 
     input:
-    tuple val(meta) , path(knownsegments), path(svs)
+    tuple val(meta) , path(knownsegments)
 
     output:
     tuple val(meta), path("*sv_points.txt")    , emit: sv_points
@@ -23,13 +23,13 @@ process ADD_SVS {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (!params.allowMissingSVFile && svs) {
+    if (!meta.missingsv) {
         """
         PSCBSgabs_plus_sv_points.py \\
-            --variants  $svs \\
+            --variants  $meta.sv \\
             --known_segments    $knownsegments \\
-            --output    ${prefix}_breakpoints.txt \\
-            --sv_out    ${prefix}_sv_points.txt \\
+            --output    ${prefix}_sv_breakpoints.txt \\
+            --sv_out    ${prefix}_sv_sv_points.txt \\
             --DDI_length    $params.min_DDI_length \\
             --selectCol $params.selSVColumn
 

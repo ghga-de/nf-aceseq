@@ -56,10 +56,8 @@ workflow SEGMENTATION {
     // MODULE:ADD_SVS 
     //
     // RUN PSCBSgabs_plus_sv_points.py to add SVs to PSCBSgaps
-
-    sv_ch = DEFINE_BREAKPOINTS.out.known_segments.map {it -> tuple( it[0], it[1], [])}   
     ADD_SVS(
-        sv_ch
+        DEFINE_BREAKPOINTS.out.known_segments
     )
     versions    = versions.mix(ADD_SVS.out.versions)
 

@@ -18,14 +18,10 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 
 fake_control = Channel.empty()
 // If no control case is active, check for existance of fake controls
-if (params.runWithFakeControl){
-    if (params.fake_control){
-        fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true )
-    }
-    else{
-        exit 1, 'To activate runWithFakeControl fake_control_prefix and fake_control file directory must be defined!'
-    }  
-}
+if (params.fake_control){
+    fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true )
+}  
+
 
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
@@ -103,7 +99,6 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 // MODULE: Local Modules
 //
 
-include { GREP_SAMPLENAME   } from '../modules/local/grep_samplename.nf'
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
 
 /*
@@ -126,6 +121,7 @@ workflow ACESEQ {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    ch_sample = INPUT_CHECK.out.ch_sample
 
     if ( !params.chrom_sizes) {
         //
@@ -137,25 +133,12 @@ workflow ACESEQ {
         ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
         chrlength   = GETCHROMSIZES.out.sizes
     }
-
-    //
-    // MODULE: Extract sample name from BAM
-    //
-    GREP_SAMPLENAME(
-        INPUT_CHECK.out.ch_sample
-    )
-    ch_versions = ch_versions.mix(GREP_SAMPLENAME.out.versions)
-
-    // Prepare an input channel of sample with sample names
-    name_ch   = GREP_SAMPLENAME.out.samplenames
-    INPUT_CHECK.out.ch_sample.join(name_ch)
-                            .set{sample_ch}
-
+    ch_sample.view()
     //
     // SUBWORKFLOW: SNV_CALLING: Call SNVs
     //
     SNV_CALLING(
-        sample_ch, 
+        ch_sample, 
         ref, 
         chrlength,
         dbsnpsnv,
@@ -187,11 +170,11 @@ workflow ACESEQ {
             
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
-        ch_sample = sample_ch.join(SNV_CALLING.out.ch_sex)
-        ch_sample = ch_sample.join(SNV_CALLING.out.all_snp) 
+        sex_sample_ch = ch_sample.join(SNV_CALLING.out.ch_sex)
+        ch_sample     = sex_sample_ch.join(SNV_CALLING.out.all_snp) 
         ch_sample.branch{
-            male:  it[7].readLines().get(0) == "male"
-            female: it[7].readLines().get(0) == "female"
+            male:  it[5].readLines().get(0) == "male"
+            female: it[5].readLines().get(0) == "female"
             other: true}
             .set{sex}
 
