@@ -99,9 +99,9 @@ def check_samplesheet(file_in, file_out):
                 elif sample and tumor and not control:  ## iscontrol false
                     if sex: ## sex must be defined 
                         if sv: ## missingsv false
-                            sample_info = [sample,sex,sv,tumor,tumor_index,"dummy.bam","dummy.bai","0","0"]
+                            sample_info = [sample,sex,sv,tumor,tumor_index,"","","0","0"]
                         else: ## missingsv true
-                            sample_info = [sample,sex,sv,tumor,tumor_index,"dummy.bam","dummy.bai","0","1"]
+                            sample_info = [sample,sex,sv,tumor,tumor_index,"","","0","1"]
                     else:  ## sex must be defined 
                         print_error("Sex must be defined for uncontrolled samples!", "Line", line)                 
                 else: 

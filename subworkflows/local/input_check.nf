@@ -38,26 +38,21 @@ def create_bam_channel(LinkedHashMap row) {
             exit 1, "ERROR: Please check input samplesheet -> Tumor file does not exist!\n${row.tumor}"
         }
         if (row.iscontrol == '0') {
-            if (!file(row.control).exists()) {
-                if (row.missingsv == '1'){
-                    bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
-                    meta.tumor_bam = file(row.tumor)
-                    meta.tumor_bai = file(row.tumor_index)
-                    meta.control_bam = []
-                    meta.control_bai = []
-                    meta.sv          = []
-                }
-                else{
-                    bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
-                    meta.tumor_bam = file(row.tumor)
-                    meta.tumor_bai = file(row.tumor_index)
-                    meta.control_bam = []
-                    meta.control_bai = []
-                    meta.sv          = file(row.sv)                        
-                }
+            if (row.missingsv == '1'){
+                bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
+                meta.tumor_bam = file(row.tumor)
+                meta.tumor_bai = file(row.tumor_index)
+                meta.control_bam = []
+                meta.control_bai = []
+                meta.sv          = []
             }
-            else {
-                exit 1, "ERROR: Please check input samplesheet -> Control file does not exist!\n${row.control}"
+            else{
+                bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
+                meta.tumor_bam = file(row.tumor)
+                meta.tumor_bai = file(row.tumor_index)
+                meta.control_bam = []
+                meta.control_bai = []
+                meta.sv          = file(row.sv)                        
             }
         }
         else{

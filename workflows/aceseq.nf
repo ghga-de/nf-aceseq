@@ -133,7 +133,6 @@ workflow ACESEQ {
         ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
         chrlength   = GETCHROMSIZES.out.sizes
     }
-    ch_sample.view()
     //
     // SUBWORKFLOW: SNV_CALLING: Call SNVs
     //

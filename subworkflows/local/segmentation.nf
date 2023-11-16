@@ -121,7 +121,7 @@ workflow SEGMENTATION {
                     .join(gc_corr_qual)
                     .join(haploblocks_chr)
                     .set{all_seg_ch}
-    all_seg_ch.view()
+    
     CLUSTER_SEGMENTS(
         all_seg_ch,
         chrlength,
