@@ -29,9 +29,6 @@ For now, this workflow is only optimal to work in ODCF Cluster. The config file 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. 
 
-<!-- TODO nf-core: Add full-sized test dataset and amend the paragraph below if applicable -->
-
-On release, automated continuous integration tests run the pipeline on a full-sized dataset on the AWS cloud infrastructure. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources.The results obtained from the full-sized test can be viewed on the [nf-core website](https://nf-co.re/aceseq/results).
 
 ## Pipeline summary
 
@@ -56,7 +53,9 @@ For the configuraton, the path and the prefix to the control coverage profile fo
 
 If there is no control, **automatically** nocontrol workflow will be switched on. In order to use nocontrol workflow, sex must be defined in metadata. 
 
-Nocontrol behaviour of this workflow uses a fake control. In order to use this functionality, --runWithFakeControl must be true --fake_control and --fake_control_prefix must be defined.
+Nocontrol behaviour of this workflow uses a fake control. In order to use this functionality, --fake_control and --fake_control_prefix must be defined.
+
+As an important note: running with Fake Control (or no control mode) cannot be executed in the same time with normal run mode (without fake control replacement)
 
 - Running only for Quality Control
 
@@ -65,16 +64,14 @@ runs SNV calling and preprocessing and quites
 
 - Running with or without Structural Variants SVs
 
-In order to integrate SV processing --svfile file path must be provided
-
---runWithCrest
+In order to integrate SV processing,A file path contaning Structural Variants must be provided in the samplesheet.
 
 - Sex estimation
 
 Sex is an important part of this workflow, if there is no control file, sex cannot be estimated through pipeline and thus must be given through samplesheet. 
 
 --estimatesex
-If it is false, sex estimation will not run and user given sex is used. To do so, Metadata must include sex
+If it is false, sex estimation will not run and user given sex is used. To do so, samplesheet must include sex column filled. 
 
 ## How to prepare files
 
@@ -137,11 +134,13 @@ An example on how the reference files for beagle are prepared can be found [here
 
 **sample**: The sample name will be tagged to the job
 
-**sex**: The sex of the sample, It is mandatory for nocontrol samples.  
+**sex**: The sex of the sample, It is only mandatory for nocontrol samples. Keep it blank to enable sex estimation. 
 
-**tumor**: The path to the tumor file
+**sv**: The path to file with structural variants, if there is no SV file will be kept blank.
 
-**tumor_index**: The path to the tumor index file
+**tumor**: The path to the tumor file.
+
+**tumor_index**: The path to the tumor index file.
 
 **control**: The path to the control file, if there is no control will be kept blank.
 

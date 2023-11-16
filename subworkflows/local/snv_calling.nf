@@ -41,9 +41,9 @@ workflow SNV_CALLING {
     //
     // RUN samtools mpileup to call variants. This process is scattered by chr intervals
     // If there is no control bam file samtools runs only for tumor automatically. 
-
+    input = combined_inputs.map {it -> tuple( it[0],it[1],it[2],it[3],it[4],it[5])}
     SAMTOOLS_MPILEUP (
-        combined_inputs, 
+        input, 
         ref
     )
     versions = versions.mix(SAMTOOLS_MPILEUP.out.versions)
@@ -98,7 +98,7 @@ workflow SNV_CALLING {
                 .groupTuple()
                 .set{ch_anno_cnv}
 
-    // Runs only for no-control samples with defined params.fake_control !
+    // Runs for fake control replacement (for bad control or no control samples) with defined params.fake_control !
 
     //// replaceControl.sh ///// 
     //

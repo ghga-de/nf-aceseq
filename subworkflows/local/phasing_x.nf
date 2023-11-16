@@ -29,7 +29,7 @@ workflow PHASING_X {
     main:
     versions     = Channel.empty()
     ch_unphased  = Channel.empty()
-
+    ch_all_snp   = Channel.empty()
     // Combine intervals with samples to create 'interval x sample' number of parallel run
     intervals  = chrlength.splitCsv(sep: '\t', by:1)
     
@@ -42,57 +42,65 @@ workflow PHASING_X {
             .set{intervals_ch}
     sample_ch
         .combine(intervals_ch)
-        .set { combined_inputs_female }
+        .set { combined_inputs }
 
-    combined_inputs_female = combined_inputs_female.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[8])}
+    combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[8])}
+
+    combined_inputs.branch{
+        control: it[0].iscontrol == "1"
+        nocontrol: it[0].iscontrol == "0"}
+        .set{input_ch}
+
     sample_ch.map{it -> tuple( it[0],it[6],it[7])}
                     .set{all_snp}
 
-    if (params.runWithFakeControl){
-        println "Running with fake control is in process -- create unphased genotypes"
-        //// estimateGenotypes.sh  //////
+    all_snp.branch{
+        control: it[0].iscontrol == "1"
+        nocontrol: it[0].iscontrol == "0"}
+        .set{all_snp_ch}
 
-        //
-        // MODULE: GET_GENOTYPES
-        //
+    ch_all_snp = ch_all_snp.mix(all_snp_ch.control)
+    //// estimateGenotypes.sh  //////
+
+    //
+    // MODULE: GET_GENOTYPES
+    //
         
-        GET_GENOTYPES(
-            all_snp
-        )
-        versions = versions.mix(GET_GENOTYPES.out.versions)
+    GET_GENOTYPES(
+        all_snp_ch.nocontrol
+    )
+    versions = versions.mix(GET_GENOTYPES.out.versions)
+    fake_snp_ch = GET_GENOTYPES.out.fake_snp
+    ch_all_snp  = ch_all_snp.mix(fake_snp_ch)
+    //// createUnphasedFiles.sh /////
 
-        //// createUnphasedFiles.sh /////
-
-        CREATE_UNPHASED(
-            GET_GENOTYPES.out.fake_snp,
-            dbsnp,
-            chr_prefix
-        )
-        unphased  = CREATE_UNPHASED.out.unphased
-        versions = versions.mix(CREATE_UNPHASED.out.versions)
+    CREATE_UNPHASED(
+        fake_snp_ch,
+        dbsnp,
+        chr_prefix
+    )
+    unphased  = CREATE_UNPHASED.out.unphased
+    versions = versions.mix(CREATE_UNPHASED.out.versions)
         
-        unphased_ch = unphased.transpose()       
-        unphased_ch.combine(intervals_ch)
-            .filter{it[1].name.contains("unphased_"+it[2]+".")}
-            .map{it -> tuple(it[2],it[0], it[1])}
-            .set{unphased}
+    unphased_ch = unphased.transpose()       
+    unphased_ch.combine(intervals_ch)
+        .filter{it[1].name.contains("unphased_"+it[2]+".")}
+        .map{it -> tuple(it[2],it[0], it[1])}
+        .set{unphased}
         
-        ch_unphased = ch_unphased.mix(unphased)
+    ch_unphased = ch_unphased.mix(unphased)
 
-    }
-    else{
-        //
-        // MODULE:BCFTOOLS_MPILEUP 
-        //
-        // RUN bcftools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
-        // in OTP running pipeline samtools mpileup is used!
-        BCFTOOLS_MPILEUP (
-            combined_inputs_female, 
-            ref
-        )
-        versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
-        ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
-    }
+    //
+    // MODULE:BCFTOOLS_MPILEUP 
+    //
+    // RUN bcftools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
+    // in OTP running pipeline samtools mpileup is used!
+    BCFTOOLS_MPILEUP (
+        input_ch.control, 
+        ref
+    )
+    versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
+    ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
     
     //
     // MODULE:CREATE_FAKE_SAMPLES 
@@ -181,7 +189,7 @@ workflow PHASING_X {
                         .set{phased_all}
 
     phased_all.map {it -> tuple( it[0], it[2], it[4])}
-                .join(all_snp, by: [0])
+                .join(ch_all_snp, by: [0])
                 .set{phasedvcf_ch}
 
     phasedvcf_ch = phasedvcf_ch.map {it -> tuple( it[0], it[1], [], it[3], it[4])}
@@ -198,17 +206,25 @@ workflow PHASING_X {
     versions          = versions.mix(ADD_HAPLOTYPES.out.versions)
     ch_snp_haplotypes = ADD_HAPLOTYPES.out.snp_haplotypes
     
-    ///// createcontrolbafplots.sh /////
+    if (params.createbafplots){
+        ///// createcontrolbafplots.sh /////
 
-    // 
-    // MODULE: CREATE_BAF_PLOTS
-    //
-    sexfile = sample_ch.map {it -> tuple( it[0], it[5])}
-    CREATE_BAF_PLOTS(
-        ch_snp_haplotypes.join(sexfile),
-        chrlength
-    )
-    versions          = versions.mix(CREATE_BAF_PLOTS.out.versions)
+        // 
+        // MODULE: CREATE_BAF_PLOTS
+        //
+
+        ch_snp_haplotypes.branch{
+            control: it[0].iscontrol == "1"
+            nocontrol: it[0].iscontrol == "0"}
+            .set{snp_hap}
+
+        sexfile = sample_ch.map {it -> tuple( it[0], it[5])}
+        CREATE_BAF_PLOTS(
+            snp_hap.control.join(sexfile),
+            chrlength
+        )
+        versions          = versions.mix(CREATE_BAF_PLOTS.out.versions)
+    }
 
     ch_haploblocks = ch_haploblocks.map {it -> tuple( it[0], it[1], [])}
 

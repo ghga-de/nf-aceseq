@@ -23,7 +23,7 @@ process GENERATE_PLOTS {
     script:
     def args    = task.ext.args ?: ''
     def prefix  = task.ext.prefix ?: "${meta.id}"
-    def allowsv = params.allowMissingSVFile ?"--sv_YN false":"--sv_YN true"
+    def allowsv = "${meta.missingsv}" == "1" ?"--sv_YN false":"--sv_YN true"
     
     """
     pscbs_plots.R \\

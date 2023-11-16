@@ -1,2 +1,2 @@
 sample,sex,sv,tumor,tumor_index,control,control_index
-SEQC2_TEST,male,,seqc2_hg37_testdata/SEQC2_LL1_T_small.bam,seqc2_hg37_testdata/SEQC2_LL1_T_small.bam.bai,seqc2_hg37_testdata/SEQC2_LL1_C_small.bam,seqc2_hg37_testdata/SEQC2_LL1_C_small.bam.bai  
+SEQC2_TEST,male,,testdata_hg37/SEQC2_LL1_T_small.bam,testdata_hg37/SEQC2_LL1_T_small.bam.bai,testdata_hg37/SEQC2_LL1_C_small.bam,testdata_hg37/SEQC2_LL1_C_small.bam.bai  
