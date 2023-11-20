@@ -22,7 +22,7 @@ process CREATE_UNPHASED {
     def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
 
-    """
+    """ 
     zcat $dbsnp | annotate_vcf.pl \\
       -a - -b $fake_snp \\
       --bFileType vcflike \\
@@ -31,7 +31,10 @@ process CREATE_UNPHASED {
       --columnName genotype \\
       --aColNameLineStart "#CHROM" | \\
       grep -v "^#" | \\
-        parseVcf.pl . ${prefix}.unphased_${chr_prefix} vcf
+        parseVcf.pl . \\
+            ${prefix}.unphased_${chr_prefix} \\
+            vcf \\
+            ${chr_prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

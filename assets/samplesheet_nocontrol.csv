@@ -1,3 +1,2 @@
 sample,sex,sv,tumor,tumor_index,control,control_index
 WES_LL_T_nocontrol,male,,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam.bai,,
-WES_LL_T,,,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam.bai,/omics/groups/OE0608/internal/kubran/data/WES_LL_N_1.bwa.dedup.bam,/omics/groups/OE0608/internal/kubran/data/WES_LL_N_1.bwa.dedup.bam.bai
