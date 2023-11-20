@@ -60,7 +60,7 @@ As an important note: running with Fake Control (or no control mode) cannot be e
 - Running only for Quality Control
 
 --runQualityCheckOnly true
-runs SNV calling and preprocessing and quites
+runs **only** SNV calling and preprocessing
 
 - Running with or without Structural Variants SVs
 
