@@ -4,7 +4,7 @@ process GC_BIAS {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_platypusindelcalling:v1':'kubran/odcf_platypusindelcalling:v1' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
     tuple val(meta), path(cnv_pos)
@@ -44,7 +44,7 @@ process GC_BIAS {
             --outDir . \\
             --lowess_f $params.lowess_f \\
             --scaleFactor $params.scale_factor \\
-            --coverageYlims $params.covplot_tlims
+            --coverageYlims $params.covplot_ylims
     else
         echo "${cnv_pos} is empty"
     fi

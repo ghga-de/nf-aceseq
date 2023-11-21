@@ -1,3 +1,4 @@
+//This only works with v0
 process CREATE_BAF_PLOTS {
     tag "$meta.id"
     label 'process_medium'

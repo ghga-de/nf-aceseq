@@ -31,7 +31,7 @@ workflow PHASING_Y {
     versions     = Channel.empty()
     ch_unphased  = Channel.empty()
     ch_all_snp   = Channel.empty()
-    ////////
+    
 
     // Combine intervals with samples to create 'interval x sample' number of parallel run
     intervals  = chrlength.splitCsv(sep: '\t', by:1)
