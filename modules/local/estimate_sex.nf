@@ -4,7 +4,7 @@ process ESTIMATE_SEX {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_platypusindelcalling:v1':'kubran/odcf_platypusindelcalling:v1' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
     tuple val(meta), val(intervals), path(cnv)

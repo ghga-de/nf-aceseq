@@ -41,69 +41,69 @@ Parameters:
 
 - Mpileup Options
 
---mpileup_qual: Minimum base quality. Default: 0 
+--mpileup_qual: quality used for parameter ‘Q’ in samtools mpileup. Minimum base quality. Default: 0 
     
 - Phasing options
   
---minHT: Minumum HT. Default: 5
+--minHT: Minumum HT.minimum number of consecutive SNPs to be considered for haploblocks. Default: 5
 
 - SNV Merge filter
 
---snp_min_coverage: Minimum SNP coverage. Default: 5
+--snp_min_coverage: Minimum SNP coverage. minimum coverage in control for SNP. Default: 5
 
 - Annotate CNV files
 
---min_X_ratio: Default 0.8
---min_Y_ratio: Default 0.12
+--min_X_ratio: minimum ratio for number of reads on chrY per base over number of reads per base over whole genome to be considered as female. Default 0.8
+--min_Y_ratio: minimum ratio for number of reads on chrY per base over number of reads per base over whole genome to be considered as male. Default 0.12
 
 - CNV Merge filter
 
---cnv_min_coverage: Default 5000
---mapping_quality: Default 1000
---min_windows: Default 5
+--cnv_min_coverage: minimum coverage for 1kb windows to be considered for merging in 10kb windows. Default 5000
+--mapping_quality: minimum mapping quality for 1kb windows to be considered for merging in 10kb windows (maximum mappability). Default 1000
+--min_windows: minimum number of 1kb windows fullfilling cnv_min_coverage and mapping_quality to obtain merged 10kb windows. Default 5
 
 - Correct GC options
 
---lowess_f: Default 0.1
---scale_factor: Default 0.9
---covplot_tlims: Default 4
---gc_bias_json_key: Default "gc-bias"
+--lowess_f: f parameter for R lowess function. Default 0.1
+--scale_factor: scale_factor for R lowess function. Default 0.9
+--covplot_ylims: ylims for Rplots in GC-bias plots. Default 4
+--gc_bias_json_key: key in GC-bias json. Default "gc-bias"
 
 - Breakpoints and gaps options
 
---min_DDI_length: Default 1000
---selSVColumn: Default "eventScore"
+--min_DDI_length: minimum length for DEL/DUP/INV to be considered for breakpoint integration. Default 1000
+--selSVColumn: column from bedpe file to be recored in ${pid}_sv_points.txt file. Default "eventScore"
 
 - PSCBS options
 
---min_seg_width: Default 2000
---undo_SD: Default  24
---pscbs_prune_height: Default 0
---min_gap_length: Default 500000
+--min_seg_width: segmentByPairedPSCBS() minwidth parameter in PSCBS R package. Default 2000
+--undo_SD: segmentByPairedPSCBS() undo.SD parameter in PSCBS R package. Default  24
+--pscbs_prune_height: pruneByHClust() parameter h in PSCBS R package. Default 0
+--min_gap_length: Default 9000
 
 - mark Segments with HomozygDel options
 
---min_segment_map: Default 0.6
+--min_segment_map: minimum average mappability over segment to be kept after segmentation. Default 0.6
 
 - cluster and prune segments
 
---min_seg_length_prune: Default 9000
---min_num_SNPs: Default 15
---clustering: Default "yes"
---min_cluster_number: Default 1
---min_membership: Default 0.8
+--min_seg_length_prune: maximum of segment to be considered for merging to neighbouring segment prior to clustering. Default 9000
+--min_num_SNPs: maximum number of SNPs in segment to be considered for merging to neighbouring segment prior to clustering. Default 15
+--clustering: should segments be clustered (yes|no), coerage and BAF will be estimated and assigned clusterwide. Default "yes"
+--min_cluster_number: minimum number of clusters to be tried with BIC. Default 1
+--min_membership: obsolete. Default 0.8
 --min_distance: Default 0.05
 
 - estimate Purity Ploidy
     
 --minLim: Default 0.47
 --maxLim: Default 0.53
---min_length_purity: Default 1000000
---min_hetSNPs_purity: Default 5000    
+--min_length_purity: minimum length of segments to be considered for tumor cell content and ploidy estimation. Default 1000000
+--min_hetSNPs_purity: minimum number of control heterozygous SNPs in segments to be considered for tumor cell content and ploidy estimation. Default 5000    
 --dh_stop: Default "max"
 --min_length_dh_stop: Default 1000000
 --dh_zero: Default "no"
---purity_min: Default 0.15
+--purity_min: minimum tumor cell content allowed. Default 0.15
 --purity_max: Default 1.0
 --ploidy_min: Default 1.0
 --ploidy_max: Default 6.5
