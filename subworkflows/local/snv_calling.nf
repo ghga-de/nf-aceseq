@@ -109,18 +109,19 @@ workflow SNV_CALLING {
         println "Running with fake control is in process -- fake control replacement"
 
         // match fake control with bad control 
-        fake_control
-            .combine(intervals_ch)
-            .filter{it[0].name.contains("."+ it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{fake_control_ch}
+        //fake_control
+        //    .combine(intervals_ch)
+        //    .filter{it[0].name.contains("."+ it[1]+".")}
+        //    .map{it -> tuple(it[0], it[1])}
+        //    .set{fake_control_ch}
    
-        input_ch = ANNOTATE_CNV.out.tmp_cnv.join(fake_control_ch, by:1) 
-        input_ch.map{it -> tuple(it[1], it[0],it[2],it[3])}
-                .set{fake_sample}
+        //input_ch = ANNOTATE_CNV.out.tmp_cnv.join(fake_control_ch, by:1) 
+        //input_ch.map{it -> tuple(it[1], it[0],it[2],it[3])}
+        //        .set{fake_sample}
         
         FAKE_CONTROL(
-            fake_sample
+            ANNOTATE_CNV.out.tmp_cnv,
+            fake_control
         )
         versions  = versions.mix(FAKE_CONTROL.out.versions)
 
@@ -140,7 +141,7 @@ workflow SNV_CALLING {
     // Runs merge_and_filter_cnv.py
     
     MERGE_CNV (
-        ch_anno_cnv,
+        ch_anno_cnv, // tuple val(meta)  , path(cnvs)
         chr_prefix
     )
     versions  = versions.mix(MERGE_CNV.out.versions)

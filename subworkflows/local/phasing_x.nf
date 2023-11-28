@@ -110,52 +110,18 @@ workflow PHASING_X {
         ch_unphased
     )
     versions = versions.mix(CREATE_FAKE_SAMPLES.out.versions)
-
-    //beagle_ref.map({it -> [it.baseName.split('\\.').toList()[1],it]}).set{deneme}
-    if (params.chr_prefix.contains('chr')){
-        
-        beagle_ref
-            .combine(intervals_ch)
-            .filter{it[0].baseName.contains(it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_ref_ch}
-
-        beagle_map.combine(intervals_ch)
-            .filter{it[0].baseName.contains(it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_map_ch}
-    }
-    else{
-        beagle_ref
-            .combine(intervals_ch)
-            .filter{it[0].baseName.contains("chr" + it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_ref_ch}
-
-        beagle_map.combine(intervals_ch)
-            .filter{it[0].baseName.contains("chr" + it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_map_ch}
-
-    }
-
-    beagle_ref_ch.join(beagle_map_ch, by:[1] )
-                .map{it -> tuple(it[1], it[0], it[2])}
-                .set{beagle_ch}
-
-    beagle_ch.join(CREATE_FAKE_SAMPLES.out.unphased_vcf, by:[1])
-             .map{it -> tuple(it[3], it[0], it[4], it[1], it[2])}
-             .set{beagle_in_ch}
-    
+  
     //
     // MODULE:BEAGLE 
     // 
     // Run beagle for Chr 1-22 and chrX if female
     // OTP runs have impute working! Beagle is new. 
     BEAGLE5_BEAGLE(
-        beagle_in_ch
+        CREATE_FAKE_SAMPLES.out.unphased_vcf,
+        beagle_ref,
+        beagle_map
+
     )
-    versions = versions.mix(BEAGLE5_BEAGLE.out.versions)
 
     // Prepare input channel  matching meta and interval
     BEAGLE5_BEAGLE.out.vcf

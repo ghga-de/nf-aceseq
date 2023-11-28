@@ -8,7 +8,7 @@ process GENERATE_PLOTS {
     
     input:
     tuple val(meta), path(all_snp_update3), path(index), path(svpoints), path(segments_w_peaks), path(purity_ploidy), path(sex_file), path(all_corrected)
-    path(chrlenght)
+    each path(chrlenght)
 
 
     output:

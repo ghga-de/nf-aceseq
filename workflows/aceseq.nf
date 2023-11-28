@@ -19,7 +19,7 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 fake_control = Channel.empty()
 // If no control case is active, check for existance of fake controls
 if (params.fake_control){
-    fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true )
+    fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true ).collect() 
 }  
 
 
@@ -45,10 +45,10 @@ dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp
 mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
 // Beagle references
-beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference + '/*.' + params.beagle_ref_ext, checkIfExists: true )                                 
+beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference, checkIfExists: true )                               
                                                 : Channel.empty()
                                                 
-beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map + '/*.' + params.beagle_map_ext, checkIfExists: true )
+beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map, checkIfExists: true )
                                                 : Channel.empty()    
 // Blacklist        
 blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
@@ -169,11 +169,12 @@ workflow ACESEQ {
             
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
+        // if female or klinefelter
         sex_sample_ch = ch_sample.join(SNV_CALLING.out.ch_sex)
         ch_sample     = sex_sample_ch.join(SNV_CALLING.out.all_snp) 
         ch_sample.branch{
             male:  it[5].readLines().get(0) == "male"
-            female: it[5].readLines().get(0) == "female"
+            female: it[5].readLines().get(0) == "female" || it[5].readLines().get(0) == "klinefelter"
             other: true}
             .set{sex}
 
@@ -208,6 +209,13 @@ workflow ACESEQ {
         //
         // SUBWORKFLOW: SEGMENTATION: 
         //
+        PREPROCESSING.out.windows_corrected
+                        .join(PREPROCESSING.out.qual_corrected)
+                        .join(snp_haplotypes_ch)
+                        .join(haploblocks_ch)
+                        .join(SNV_CALLING.out.ch_sex)
+                        .set{segments_ch}  
+        segments_ch.view()
         SEGMENTATION(
             PREPROCESSING.out.windows_corrected,
             PREPROCESSING.out.qual_corrected,
