@@ -106,6 +106,9 @@ workflow PHASING_Y {
     // Prepare moch haploblock file for chrX
     tmp = combined_inputs.map {it -> tuple( it[0], it[1])}
 
+    //
+    // MODULE:MAKE_MOCK 
+    //
     MAKE_MOCK(
         tmp,
         chr_prefix
@@ -127,41 +130,11 @@ workflow PHASING_Y {
     // 
     // Run beagle for Chr 1-22 chrX if female
     // OTP runs have impute working! Beagle is new. 
-    if (params.chr_prefix.contains('chr')){
-        
-        beagle_ref
-            .combine(intervals_ch)
-            .filter{it[0].baseName.contains(it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_ref_ch}
-
-        beagle_map.combine(intervals_ch)
-            .filter{it[0].baseName.contains(it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_map_ch}
-    }
-    else{
-        beagle_ref
-            .combine(intervals_ch)
-            .filter{it[0].baseName.contains("chr" + it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_ref_ch}
-
-        beagle_map.combine(intervals_ch)
-            .filter{it[0].baseName.contains("chr" + it[1]+".")}
-            .map{it -> tuple(it[0], it[1])}
-            .set{beagle_map_ch}
-
-    }
-    beagle_ref_ch.join(beagle_map_ch, by:[1] )
-                .map{it -> tuple(it[1], it[0], it[2])}
-                .set{beagle_ch}
-    beagle_ch.join(CREATE_FAKE_SAMPLES.out.unphased_vcf, by:[1])
-             .map{it -> tuple(it[3], it[0], it[4], it[1], it[2])}
-             .set{beagle_in_ch} 
-
     BEAGLE5_BEAGLE(
-        beagle_in_ch
+        CREATE_FAKE_SAMPLES.out.unphased_vcf,
+        beagle_ref,
+        beagle_map
+
     )
     versions = versions.mix(BEAGLE5_BEAGLE.out.versions)
 
@@ -193,13 +166,13 @@ workflow PHASING_Y {
                         .groupTuple()
                         .join(haploblock_x)                    
                         .set{ch_haploblocks}
-                       
+                   
     // if sample is male phased_vcf_x will be used as mock otherwise it is already in phased_vcf
     EMBED_HAPLOTYPES.out.phased_vcf
                         .groupTuple()
                         .join(phased_vcf_x)
                         .set{phased_all}
-
+    
     phased_all.map {it -> tuple( it[0], it[2], it[4])}
                 .join(ch_all_snp, by: [0])
                 .set{phasedvcf_ch}

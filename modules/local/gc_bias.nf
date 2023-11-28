@@ -8,15 +8,15 @@ process GC_BIAS {
     
     input:
     tuple val(meta), path(cnv_pos)
-    path(rep_time)
-    path(chrlength)
-    path(gc_content)
+    each path(rep_time)
+    each path(chrlength)
+    each path(gc_content)
 
     output:
     tuple val(meta), path('*.slim.txt')                 , emit: gc                 , optional: true
-    tuple val(meta), path('*_all.cnv.corrected.tab.gz') , emit: corrected_windows  , optional: true
-    tuple val(meta), path('*.gc_corrected.tsv')         , emit: corrected_quality  , optional: true
-    tuple val(meta), path('*all_corrected.txt.gz')      , emit: all_corrected      , optional: true 
+    tuple val(meta), path('*_all.cnv.corrected.tab.gz') , emit: corrected_windows
+    tuple val(meta), path('*.gc_corrected.tsv')         , emit: corrected_quality  
+    tuple val(meta), path('*all_corrected.txt.gz')      , emit: all_corrected     
     path('*_all_seg.gc_corrected.txt')                                             , optional: true
     path('*.tsv')                                                                  , optional: true
     path('*.png')                                                                  , optional: true

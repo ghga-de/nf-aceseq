@@ -141,7 +141,7 @@ An example on how the reference files for beagle are prepared can be found [here
 
 **sample**: The sample name will be tagged to the job
 
-**sex**: The sex of the sample, It is only mandatory for nocontrol samples. Keep it blank to enable sex estimation. 
+**sex**: The sex of the sample (male, female or klinefelter), It is only mandatory for nocontrol samples. Keep it blank to enable sex estimation. 
 
 **sv**: The path to file with structural variants, if there is no SV file will be kept blank.
 

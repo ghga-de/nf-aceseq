@@ -8,9 +8,9 @@ process ESTIMATE_HDRSCORE {
 
     input:
     tuple val(meta) , path(json), path(txt_files), path(sexfile)
-    path(blacklist)
-    path(centromers)
-    path(cytobands)
+    each path(blacklist)
+    each path(centromers)
+    each path(cytobands)
 
     output:
     tuple val(meta), path("*.txt")        , emit: txt

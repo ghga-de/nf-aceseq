@@ -7,7 +7,8 @@ process FAKE_CONTROL {
         'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
-    tuple val(meta), val(intervals),file(bad_cnv), file(fake_cnv)
+    tuple val(meta), val(intervals),file(bad_cnv)
+    path(fake_cnv)
 
     output:
     tuple val(meta), path('*.cnv.anno.tab.gz')    , emit: new_cnp 
@@ -22,7 +23,7 @@ process FAKE_CONTROL {
 
     """
     replaceControlACEseq.R \\
-        -f $fake_cnv \\
+        -f ${params.fake_control_prefix}.${intervals}.cnv.anno.tab.gz \\
         -b $bad_cnv \\
         -o ${prefix}.tmp.${intervals}.cnv.anno.tab.gz
 
