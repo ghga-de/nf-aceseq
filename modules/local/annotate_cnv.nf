@@ -1,7 +1,7 @@
 // This needs to run per cnv.tab.gz !
 process ANNOTATE_CNV {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high_cpu_low_memory'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

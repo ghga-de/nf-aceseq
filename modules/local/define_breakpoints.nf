@@ -1,7 +1,7 @@
 //This only works with v0
 process DEFINE_BREAKPOINTS {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

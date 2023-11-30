@@ -1,7 +1,7 @@
 // This process only works if there is SV file as an input
 process ADD_CREST {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low_cpu_high_memory'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

@@ -133,7 +133,8 @@ workflow PHASING_Y {
     BEAGLE5_BEAGLE(
         CREATE_FAKE_SAMPLES.out.unphased_vcf,
         beagle_ref,
-        beagle_map
+        beagle_map,
+        chr_prefix
 
     )
     versions = versions.mix(BEAGLE5_BEAGLE.out.versions)

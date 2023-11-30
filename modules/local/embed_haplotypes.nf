@@ -1,6 +1,6 @@
 process EMBED_HAPLOTYPES {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_high_cpu_low_memory'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

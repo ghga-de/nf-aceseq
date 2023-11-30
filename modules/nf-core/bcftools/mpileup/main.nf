@@ -1,6 +1,6 @@
 process BCFTOOLS_MPILEUP {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
