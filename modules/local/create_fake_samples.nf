@@ -1,6 +1,6 @@
 process CREATE_FAKE_SAMPLES {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

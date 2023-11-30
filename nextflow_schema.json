@@ -42,6 +42,110 @@
                 }
             }
         },
+        "main_swiches": {
+            "title": "Main swiches",
+            "type": "object",
+            "description": "Main decisions for post processes",
+            "default": "",
+            "properties": {
+              "runQualityCheckOnly": {
+                "type": "boolean",
+                "default": "false",
+                "fa_icon": "fas fa-post_processes",
+                "description": "Run only quality check"
+              },
+              "estimatesex": {
+                "type": "boolean",
+                "default": "true",
+                "fa_icon": "fas fa-post_processes",
+                "description": "Enable sex estimation, sex data is optional in samplesheet only if sample is paired with tumor and control"
+              },
+              "createbafplots": {
+                "type": "boolean",
+                "default": "true",
+                "fa_icon": "fas fa-post_processes",
+                "description": "Enable BAF plots"
+              },
+              "legacyMode": {
+                "type": "boolean",
+                "default": "true",
+                "fa_icon": "fas fa-post_processes",
+                "description": ""
+              },
+              "skip_multiqc": {
+                "type": "boolean",
+                "default": "false",
+                "fa_icon": "fas fa-post_processes",
+                "description": "Skip MultiQC"
+              }
+            }
+          },
+        "annotation_files": {
+            "title": "Annotation files",
+            "type": "object",
+            "description": "Options for screenshots",
+            "default": "",
+            "properties": {
+                "dbsnp_snv": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "dbSNP SNV VCF file, should be indexed. Column Name: DBSNP" 
+                },  
+                "mapability_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC wg Encode Mapability BED.GZ, should be indexed. Column Name: MAPABILITY" 
+                },  
+                "replication_time_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                },  
+                "gc_content_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                },  
+                "gene_annotation_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                },  
+                "centromer_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                },  
+                "blacklist_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                },  
+                "cytobands_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "" 
+                }
+            }
+          },
         "reference_genome_options": {
             "title": "Reference genome options",
             "type": "object",
@@ -67,8 +171,54 @@
                     "type": "string",
                     "format": "file-path",
                     "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "pattern": "^\\S+\\.fai?$",
                     "description": "Path to FAI genome file.",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "chrom_sizes": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "description": "Path to chromosome size file.",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "contig_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "description": "Path to contig file.",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "chr_prefix": {
+                    "type": "string",
+                    "description": "'chr' or ''",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "beagle_reference": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Directory / Beagle reference directory",
+                    "fa_icon": "fas fa-cloud-download-alt"
+                },
+                "beagle_genetic_map": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Directory / Beagle map files directory",
+                    "fa_icon": "fas fa-cloud-download-alt"
+                },
+                "beagle_ref_ext": {
+                    "type": "string",
+                    "description": "Beagle reference file extentions:vcf,bref or bref",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "beagle_map_ext": {
+                    "type": "string",
+                    "description": "Beagle map file extentions:map",
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
                     "fa_icon": "far fa-file-code"
                 },
@@ -89,6 +239,242 @@
                 }
             }
         },
+        "pipeline_params": {
+            "title": "Pipeline options",
+            "type": "object",
+            "description": "Options for screenshots",
+            "default": "",
+            "properties": {
+              "mpileup_qual": {
+                "type": "integer",
+                "default": "0",
+                "fa_icon": "fas fa-filter",
+                "description": ""
+              },
+              "minHT": {
+                "type": "integer",
+                "default": "5",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "snp_min_coverage": {
+                "type": "integer",
+                "default": "5",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_X_ratio": {
+                "type": "number",
+                "default": "0.8",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_Y_ratio": {
+                "type": "number",
+                "default": "0.12",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "cnv_min_coverage": {
+                "type": "integer",
+                "default": "5000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "mapping_quality": {
+                "type": "integer",
+                "default": "1000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_windows": {
+                "type": "integer",
+                "default": "5",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "lowess_f": {
+                "type": "number",
+                "default": "0.1",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "scale_factor": {
+                "type": "number",
+                "default": "0.9",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "covplot_ylims": {
+                "type": "integer",
+                "default": "4",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "gc_bias_json_key": {
+                "type": "string",
+                "default": "'gc-bias'",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "selSVColumn": {
+                "type": "string",
+                "default": "'eventScore'",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_DDI_length": {
+                "type": "integer",
+                "default": "1000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_seg_width": {
+                "type": "integer",
+                "default": "2000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "undo_SD": {
+                "type": "integer",
+                "default": "24",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "pscbs_prune_height": {
+                "type": "integer",
+                "default": "0",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_gap_length": {
+                "type": "integer",
+                "default": "500000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_segment_map": {
+                "type": "number",
+                "default": "0.6",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_seg_length_prune": {
+                "type": "integer",
+                "default": "9000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_num_SNPs": {
+                "type": "integer",
+                "default": "15",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "clustering": {
+                "type": "string",
+                "default": "yes",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_cluster_number": {
+                "type": "integer",
+                "default": "1",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_membership": {
+                "type": "number",
+                "default": "0.8",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_distance": {
+                "type": "number",
+                "default": "0.05",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "minLim": {
+                "type": "number",
+                "default": "0.47",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "maxLim": {
+                "type": "number",
+                "default": "0.53",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_length_purity": {
+                "type": "integer",
+                "default": "1000000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_hetSNPs_purity": {
+                "type": "integer",
+                "default": "5000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "dh_stop": {
+                "type": "string",
+                "default": "max",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "min_length_dh_stop": {
+                "type": "integer",
+                "default": "1000000",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "dh_zero": {
+                "type": "string",
+                "default": "no",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "purity_min": {
+                "type": "number",
+                "default": "0.15",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "purity_max": {
+                "type": "number",
+                "default": "1.0",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "ploidy_min": {
+                "type": "number",
+                "default": "1.0",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "ploidy_max": {
+                "type": "number",
+                "default": "6.5",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "local_minium_upper_boundary_shift": {
+                "type": "number",
+                "default": "0.1",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              },
+              "ymaxcov_threshold": {
+                "type": "number",
+                "default": "8.0",
+                "fa_icon": "fas fa-annotation",
+                "description": " "
+              }
+            }
+          },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",

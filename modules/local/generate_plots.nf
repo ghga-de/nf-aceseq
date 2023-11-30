@@ -1,6 +1,6 @@
 process GENERATE_PLOTS {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_low_cpu_high_memory'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

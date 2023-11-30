@@ -119,7 +119,8 @@ workflow PHASING_X {
     BEAGLE5_BEAGLE(
         CREATE_FAKE_SAMPLES.out.unphased_vcf,
         beagle_ref,
-        beagle_map
+        beagle_map,
+        chr_prefix
 
     )
 
