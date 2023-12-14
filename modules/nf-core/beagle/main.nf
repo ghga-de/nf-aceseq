@@ -9,8 +9,9 @@ process BEAGLE5_BEAGLE {
 
     input:
     tuple val(meta),val(intervals),path(vcf)
-    path(refpanel)
-    path(genmap)
+    each path(refpanel)
+    each path(genmap)
+    val(chr_prefix)
 
     output:
     tuple val(meta),val(intervals), path("*.vcf.gz")  , emit: vcf
@@ -21,8 +22,9 @@ process BEAGLE5_BEAGLE {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.phased_${intervals}_2samples"
+    def args       = task.ext.args ?: ''
+    def prefix     = task.ext.prefix ?: "${meta.id}.phased_${intervals}_2samples"
+    def add_prefix = chr_prefix ? "": "chr"
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -36,8 +38,8 @@ process BEAGLE5_BEAGLE {
         gt=${vcf} \\
         out=${prefix} \\
         $args \\
-        ref=ALL.${intervals}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.CHR.bref3 \\
-        map=plink.${intervals}.GRCh38.CHR.map \\
+        ref=\$(find $refpanel/ -name "*${add_prefix}${intervals}.*.${params.beagle_ref_ext}") \\
+        map=\$(find $genmap/ -name "*${add_prefix}${intervals}.*.${params.beagle_map_ext}") \\
         impute=false 
 
     cat <<-END_VERSIONS > versions.yml

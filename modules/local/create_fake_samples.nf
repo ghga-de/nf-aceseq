@@ -1,17 +1,17 @@
 process CREATE_FAKE_SAMPLES {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
     tuple val(meta) , val(intervals), path(vcf)
 
     output:
-    tuple val(meta),val(intervals), path("*.vcf")  , emit: unphased_vcf 
-    path  "versions.yml"                           , emit: versions
+    tuple val(meta), val(intervals), path("*.vcf")  , emit: unphased_vcf 
+    path  "versions.yml"                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

@@ -36,9 +36,10 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,tumor,tumor_index, control, control_index
-    sample_WithControl,tumor1.bam,tumot1.bai,control1.bam,control1.bai
-    sample_WithoutControl,tumor2.bam,tumor2.bai,,
+    sample,sex,sv,tumor,tumor_index, control, control_index
+    sample_WithControl,,,tumor1.bam,tumot1.bai,control1.bam,control1.bai
+    sample_WithoutControl,male,,tumor2.bam,tumor2.bai,,
+    sample_Withsv,,sv.file,tumor2.bam,tumor2.bai,,
     For an example see:
     https://github.com/ghga-de/nf-acecalling/assets/samplesheet.csv
     """
@@ -47,8 +48,8 @@ def check_samplesheet(file_in, file_out):
     with open(file_in, "r", encoding='utf-8-sig') as fin:
 
         ## Check header
-        MIN_COLS = 2
-        HEADER = ["sample", "tumor","tumor_index", "control","control_index" ]
+        MIN_COLS = 3
+        HEADER = ["sample","sex","sv", "tumor","tumor_index", "control","control_index" ]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(
@@ -78,7 +79,7 @@ def check_samplesheet(file_in, file_out):
                     )
 
                 ## Check sample name entries
-                sample, tumor, tumor_index, control, control_index = lspl[: len(HEADER)]
+                sample, sex, sv, tumor, tumor_index, control, control_index = lspl[: len(HEADER)]
                 if sample.find(" ") != -1:
                     print(
                         f"WARNING: Spaces have been replaced by underscores for sample: {sample}"
@@ -89,12 +90,21 @@ def check_samplesheet(file_in, file_out):
 
 
                 ## Auto-detect with control/without control
-                sample_info = []  ## [sample, tumor, control, iscontrol]
+                sample_info = []  ## [sample, tumor, control, iscontrol, missingsv]
                 if sample and tumor and control:  ## iscontrol true
-                    sample_info = [sample, tumor, tumor_index, control, control_index , "1"]
+                    if sv: ## missingsv false
+                        sample_info = [sample,sex,sv,tumor,tumor_index,control,control_index,"1", "0"]
+                    else: ## missingsv true
+                        sample_info = [sample,sex,sv,tumor,tumor_index,control,control_index,"1", "1"]
                 elif sample and tumor and not control:  ## iscontrol false
-                    sample_info = [sample, tumor,tumor_index,"dummy.bam","dummy.bai","0"]
-                else:
+                    if sex: ## sex must be defined 
+                        if sv: ## missingsv false
+                            sample_info = [sample,sex,sv,tumor,tumor_index,"","","0","0"]
+                        else: ## missingsv true
+                            sample_info = [sample,sex,sv,tumor,tumor_index,"","","0","1"]
+                    else:  ## sex must be defined 
+                        print_error("Sex must be defined for uncontrolled samples!", "Line", line)                 
+                else: 
                     print_error("Invalid combination of columns provided!", "Line", line)
 
                 ## Create sample mapping dictionary = {sample: [[ tumor, control, iscontrol ]]}
@@ -112,7 +122,7 @@ def check_samplesheet(file_in, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
             fout.write(
-                ",".join(["sample", "tumor","tumor_index", "control","control_index", "iscontrol"])
+                ",".join(["sample","sex","sv","tumor","tumor_index","control","control_index","iscontrol","missingsv"])
                 + "\n"
             )
             for sample in sorted(sample_mapping_dict.keys()):

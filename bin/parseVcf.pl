@@ -1,11 +1,11 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # Distributed under the GNU GENERAL PUBLIC LICENSE (license terms are at https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE_GNU.txt).
 use strict;
 use warnings;
 
-my %filehandle; my $filename; my $filenametmp;
+my %filehandle; my $filename; my $filenametmp; my $chr_prefix;
 
 for (my $i=1; $i < 25; $i++){
 	my $id = $i;
@@ -24,7 +24,9 @@ while (my $line = <STDIN> ){
 	$fields[9] = $fields[8];
 	$fields[8] = "GT";
 	if ($filehandle{$fields[0]}){
-		print {$filehandle{$fields[0]}} join("\t", @fields);
+		my $fh = $filehandle{$fields[0]};
+		$fields[0] = $ARGV[3] . $fields[0];
+		print {$fh} join("\t", @fields);
 	}
 }
 

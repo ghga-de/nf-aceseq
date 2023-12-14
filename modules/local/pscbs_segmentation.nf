@@ -4,7 +4,7 @@ process PSCBS_SEGMENTATION {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
     tuple val(meta), path(breakpoints), path(pscbs_data), path(index)
@@ -21,7 +21,7 @@ process PSCBS_SEGMENTATION {
     def args      = task.ext.args ?: ''
     def prefix    = task.ext.prefix ?: "${meta.id}"
     def nocontrol = meta.iscontrol == "1" ? "" : "--nocontrol TRUE"
-    def sv        = params.allowMissingSVFile? "--sv false" : "--sv true"
+    def allowsv = "${meta.missingsv}" == "1" ?"--sv false":"--sv true"
 
     """
     pscbs_all.R \\
@@ -33,7 +33,7 @@ process PSCBS_SEGMENTATION {
         --undo.SD   $params.undo_SD \\
         -h  $params.pscbs_prune_height \\
         --libloc    "" \\
-        $sv \\
+        $allowsv \\
         $nocontrol
 
     cat <<-END_VERSIONS > versions.yml

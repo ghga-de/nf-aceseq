@@ -1,5 +1,5 @@
 //
-// CORRECT_GC_BIAS: RUN 
+// PREPROCESSING: RUN 
 //
 
 params.options = [:]
@@ -8,7 +8,7 @@ include { GC_BIAS         } from '../../modules/local/gc_bias.nf'           addP
 include { CONVERT_TO_JSON } from '../../modules/local/convert_to_json.nf'   addParams( options: params.options )
 
 
-workflow CORRECT_GC_BIAS {
+workflow PREPROCESSING {
     take:
     cnv_pos       // channel: [val(meta), cnv_positions]
     rep_time      // channel: [path(fasta), path(fai)]
@@ -19,7 +19,7 @@ workflow CORRECT_GC_BIAS {
     versions = Channel.empty()
     
     ///// correct_gc_bias.sh ////
-
+    cnv_pos.view()
     //
     // MODULE: GC_BIAS
     //
@@ -28,7 +28,7 @@ workflow CORRECT_GC_BIAS {
         cnv_pos,
         rep_time,
         chrlength,
-        gc_content,
+        gc_content
     )
     qual_corrected    = GC_BIAS.out.corrected_quality
     windows_corrected = GC_BIAS.out.corrected_windows

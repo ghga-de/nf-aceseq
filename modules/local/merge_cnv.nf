@@ -4,10 +4,11 @@ process MERGE_CNV {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
     tuple val(meta)        , path(cnv)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path("*cnv.tab.gz")    , emit: cnv 
@@ -19,10 +20,11 @@ process MERGE_CNV {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix_in = params.fake_control_prefix ? "${prefix}.tmp" : "${prefix}"
 
     """
     merge_and_filter_cnv.py \\
-        --inputpath "${prefix}.chr" \\
+        --inputpath "${prefix_in}.${chr_prefix}" \\
         --inputsuffix ".cnv.anno.tab.gz" \\
         --output ${prefix}.cnv.tab.gz \\
         --coverage $params.cnv_min_coverage \\

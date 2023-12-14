@@ -1,5 +1,5 @@
 //
-// BREAKPOINTS_SEGMENTS: RUN 
+// SEGMENTATION:
 //
 
 params.options = [:]
@@ -10,13 +10,11 @@ include { ADD_CREST              } from '../../modules/local/add_crest.nf'      
 include { PSCBS_SEGMENTATION     } from '../../modules/local/pscbs_segmentation.nf'     addParams( options: params.options )
 include { HOMOZYGOUS_DELETIONS   } from '../../modules/local/homozygous_deletions.nf'   addParams( options: params.options )
 include { CLUSTER_SEGMENTS       } from '../../modules/local/cluster_segments.nf'       addParams( options: params.options )
-include { ESTIMATE_PEAKS         } from '../../modules/local/estimate_peaks.nf'         addParams( options: params.options )
-include { ESTIMATE_PURITY_PLOIDY } from '../../modules/local/estimate_purity_ploidy.nf' addParams( options: params.options )
 include { SEGMENTS_TO_DATA as SEGMENTS_TO_HOMODEL } from '../../modules/local/segments_to_data.nf'     addParams( options: params.options )
 include { SEGMENTS_TO_DATA as SEGMENTS_TO_SNP     } from '../../modules/local/segments_to_data.nf'     addParams( options: params.options )
 
 
-workflow BREAKPOINTS_SEGMENTS {
+workflow SEGMENTATION {
     take:
     gc_corr_win     // channel: [val(meta), path(cnv_corrected_win tab.gz)]
     gc_corr_qual    // channel: [val(meta), path(cnv_corrected_qual tab)]
@@ -26,6 +24,7 @@ workflow BREAKPOINTS_SEGMENTS {
     centromers      // channel: centromers.txt
     chrlength       // channel: [[chr, region], [chr, region], ...]
     mappability     // channel: [mappability, index]
+    chr_prefix
 
     main:
     versions = Channel.empty()
@@ -39,7 +38,7 @@ workflow BREAKPOINTS_SEGMENTS {
     gc_corr_win.join(snp_pos_haplo_wg)
                 .join(sex_file)
                 .set{input_ch}
-
+    
     DEFINE_BREAKPOINTS(
         input_ch,
         centromers
@@ -51,15 +50,14 @@ workflow BREAKPOINTS_SEGMENTS {
 
 
     ////PSCBSgaps_SV.sh ////
-
+    // ADD_SNV and ADD_CREST suppose to add SV data if available and id allowMissingSV flag is not off. 
+    // Otherwise it preduces empty svs file with copied breakpoints.
     //
     // MODULE:ADD_SVS 
     //
     // RUN PSCBSgabs_plus_sv_points.py to add SVs to PSCBSgaps
-
-    sv_ch = DEFINE_BREAKPOINTS.out.known_segments.map {it -> tuple( it[0], it[1], [])}   
     ADD_SVS(
-        sv_ch
+        DEFINE_BREAKPOINTS.out.known_segments
     )
     versions    = versions.mix(ADD_SVS.out.versions)
 
@@ -123,12 +121,14 @@ workflow BREAKPOINTS_SEGMENTS {
                     .join(gc_corr_qual)
                     .join(haploblocks_chr)
                     .set{all_seg_ch}
-
+    
     CLUSTER_SEGMENTS(
         all_seg_ch,
-        chrlength
+        chrlength,
+        chr_prefix
     )
-    versions    = versions.mix(CLUSTER_SEGMENTS.out.versions)
+    versions              = versions.mix(CLUSTER_SEGMENTS.out.versions)
+    ch_clustered_segments = CLUSTER_SEGMENTS.out.clustered_segments
 
     //// segmentsprunednormal.sh ////
     //
@@ -136,49 +136,19 @@ workflow BREAKPOINTS_SEGMENTS {
     //
     // Run segments_to_data.py
 
-    CLUSTER_SEGMENTS.out.clustered_segments
-                        .join(CLUSTER_SEGMENTS.out.snp_update2)
-                        .set{segments_ch}
+    ch_clustered_segments
+                    .join(CLUSTER_SEGMENTS.out.snp_update2)
+                    .set{segments_ch}
+
     SEGMENTS_TO_SNP(
         segments_ch,
         3
     )
     ch_all_snp_update3 = SEGMENTS_TO_SNP.out.all_seg
 
-    //// purityPloidity.sh ////
-    //
-    // MODULE: ESTIMATE_PEAKS
-    //
-    //
-    //Run purity_ploidy.R
-    ch_all_snp_update3
-                .join(CLUSTER_SEGMENTS.out.clustered_segments)
-                .join(sex_file)
-                .set{segments2_ch}
-
-    ESTIMATE_PEAKS(
-        segments2_ch
-    )
-    versions           = versions.mix(ESTIMATE_PEAKS.out.versions)
-    ch_segment_w_peaks = ESTIMATE_PEAKS.out.segment_w_peaks
-
-    //purityPloidity_EstimateFinal.sh
-    //
-    // MODULE: ESTIMATE_PURITY_PLOIDY
-    //
-    //Run purity_ploidy_estimation_final.R
-
-    ESTIMATE_PURITY_PLOIDY(
-        ch_segment_w_peaks.join(sex_file)
-    )
-    versions    = versions.mix(ESTIMATE_PURITY_PLOIDY.out.versions)
-
-    ch_purity_ploidy = ESTIMATE_PURITY_PLOIDY.out.purity_ploidy
-
     emit:
+    ch_clustered_segments
     ch_sv_points
     ch_all_snp_update3
-    ch_purity_ploidy
-    ch_segment_w_peaks
     versions
 }

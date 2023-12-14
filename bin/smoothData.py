@@ -237,4 +237,4 @@ if __name__ == "__main__":
 	#print last line(s)
 	out.write( "\t".join( str(prior_line[key]) for key in infile.header ) + "\n" ) 
 	if newline:
-		out.write( "\t".join( str(newline[key]) for key in infile.header ) + "\n" ) 
+		out.write( "\t".join( str(newline[key]) for key in infile.header ) + "\n" )

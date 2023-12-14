@@ -1,10 +1,10 @@
 process HOMOZYGOUS_DELETIONS {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
+    'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
     tuple val(meta) , path(segments), path(sv_points)

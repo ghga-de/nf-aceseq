@@ -1,19 +1,20 @@
-process PARSE_JSON {
+process ESTIMATE_HDRSCORE {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
-    tuple val(meta) , path(json), path(sexfile)
-    path(blacklist)
-    path(centromers)
+    tuple val(meta) , path(json), path(txt_files), path(sexfile)
+    each path(blacklist)
+    each path(centromers)
+    each path(cytobands)
 
     output:
-    tuple val(meta), path("*.txt"), emit: txt
-    path  "versions.yml"          , emit: versions
+    tuple val(meta), path("*.txt")        , emit: txt
+    path  "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -29,7 +30,8 @@ process PARSE_JSON {
         -m $params.legacyMode \\
         -b $blacklist \\
         -s $sexfile \\
-        -c $centromers 
+        -c $centromers \\
+        -y $cytobands
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -4,10 +4,10 @@ process ADD_HAPLOTYPES {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
-    tuple val(meta) , path(haplo_germ),path(haplo_x), path(snp_positions), path(index)
+    tuple val(meta) , path(haplo_germ), path(haplo_x), path(snp_positions), path(index)
 
     output:
     tuple val(meta), path("*.tab.gz"), path("*.tab.gz.tbi")  , emit: snp_haplotypes
