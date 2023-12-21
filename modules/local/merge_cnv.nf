@@ -7,7 +7,7 @@ process MERGE_CNV {
         'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
-    tuple val(meta)        , path(cnv)
+    tuple val(meta) , path(cnv)
     val(chr_prefix)
 
     output:

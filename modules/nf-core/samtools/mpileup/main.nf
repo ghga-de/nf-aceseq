@@ -1,5 +1,5 @@
 process SAMTOOLS_MPILEUP {
-    tag "$meta.id"
+    tag "$meta.id chr$intervals"
     label 'process_medium'
 
     conda "bioconda::samtools=1.9"

@@ -1,5 +1,5 @@
 process CREATE_FAKE_SAMPLES {
-    tag "$meta.id"
+    tag "$meta.id chr$intervals"
     label 'process_low'
 
     conda (params.enable_conda ? "" : null)

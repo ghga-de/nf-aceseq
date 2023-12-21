@@ -126,10 +126,6 @@ do
 		exit 2
 	fi
 
-	HRDFile=${pid}_HRDscore_${ploidyFactor}_${tcc}.txt
-	HRD_DETAILS_FILE=${pid}_HRDscore_contributingSegments_${ploidyFactor}_${tcc}.txt
-	LST_DETAILS_FILE=${pid}_LSTscore_contributingSegments_${ploidyFactor}_${tcc}.CentromerReduced.txt
-	MERGED_REDUCED_FILE=${pid}_comb_pro_extra${ploidyFactor}_${tcc}.smoothed.CentromerReduced.txt
 	echo "before hdr estimation"
 	HRD_estimation.R \
 		$combProFileNoArtifacts \
@@ -138,10 +134,10 @@ do
 		$ploidy \
 		$tcc \
 		$pid \
-		${HRDFile}.tmp \
-		${HRD_DETAILS_FILE}.tmp \
-		${LST_DETAILS_FILE}.tmp \
-		${MERGED_REDUCED_FILE}.tmp \
+		${pid}_HRDscore_${ploidyFactor}_${tcc}.txt \
+		${pid}_HRDscore_contributingSegments_${ploidyFactor}_${tcc}.txt \
+		${pid}_LSTscore_contributingSegments_${ploidyFactor}_${tcc}.CentromerReduced.txt \
+		${pid}_comb_pro_extra${ploidyFactor}_${tcc}.smoothed.CentromerReduced.txt \
 		${centromers} \
 		${cytobandsFile} \
 		.
@@ -162,11 +158,6 @@ do
 		exit 2
 	fi
 
-	mv ${HRDFile}.tmp ${HRDFile}
-	mv ${HRD_DETAILS_FILE}.tmp ${HRD_DETAILS_FILE}
-	mv ${LST_DETAILS_FILE}.tmp ${LST_DETAILS_FILE}
-	mv ${MERGED_REDUCED_FILE}.tmp ${MERGED_REDUCED_FILE}
-	rm ${combProFile}.tmp
 done
 if [[ "$?" != 0 ]]
 then

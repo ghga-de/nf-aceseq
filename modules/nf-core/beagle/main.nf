@@ -1,5 +1,5 @@
 process BEAGLE5_BEAGLE {
-    tag "$meta.id"
+    tag "$meta.id chr$intervals"
     label 'process_high'
 
     conda "bioconda::beagle=5.2_21Apr21.304"

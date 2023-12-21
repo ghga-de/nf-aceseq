@@ -759,6 +759,7 @@ test_new$maxStop =NA
 swapAlleles <- function(segments, data, chr, blockPre, blockPost){
 
   blockFile <- paste0( blockPre, chr, ".", blockPost)
+  cat(paste0("blockFile: ",blockFile, "\n\n"))
   blocks <- read.table( blockFile, header=F)
   colnames(blocks) <- c('chr', 'start', 'end', 'length')
   
@@ -896,6 +897,7 @@ for (chr in  seq_len(maxChr) ) {
 		if ( chr <= max(chromosomes) ) {
 		#adjust allele frequencies
 			dataAll[[chr]]$adjusted <- NA
+      cat(paste0("chr: ",chr, "\n\n"))
 			dataAll[[chr]] <- swapAlleles( test_new[selSeg,], dataAll[[chr]], chr, blockPre, blockSuf)
    
 			selRem <- which( dataAll[[chr]]$betaN > 0.3 & dataAll[[chr]]$betaN < 0.7 & is.na(dataAll[[chr]]$adjusted) )
