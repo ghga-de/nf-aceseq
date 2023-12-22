@@ -1,5 +1,5 @@
 process BCFTOOLS_MPILEUP {
-    tag "$meta.id chr$intervals"
+    tag "$meta.id $intervals"
     label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)

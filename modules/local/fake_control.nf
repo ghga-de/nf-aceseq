@@ -1,5 +1,5 @@
 process FAKE_CONTROL {
-    tag "$meta.id chr$intervals"
+    tag "$meta.id $intervals"
     label 'process_single'
 
     conda     (params.enable_conda ? "" : null)

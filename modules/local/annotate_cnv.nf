@@ -1,6 +1,6 @@
 // This needs to run per cnv.tab.gz !
 process ANNOTATE_CNV {
-    tag "$meta.id chr$intervals"
+    tag "$meta.id $intervals"
     label 'process_high_cpu_low_memory'
 
     conda     (params.enable_conda ? "" : null)
