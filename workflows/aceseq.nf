@@ -25,6 +25,7 @@ if (params.fake_control){
 
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
+
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
 chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) 
@@ -100,6 +101,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 //
 
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
+include { BEAGLE_REFERENCE  } from '../modules/local/beagle_reference.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,15 +129,21 @@ workflow ACESEQ {
         //
         // MODULE: Prepare chromosome size file if not provided
         //
-        GETCHROMSIZES(
-            ref
-            )
-        ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
+        GETCHROMSIZES(ref)
         chrlength   = GETCHROMSIZES.out.sizes
     }
+    //if (!params.beagle_ref | !params.beagle_map){
+    //    BEAGLE_REFERENCE(ref)
+    //    beagle_ref = BEAGLE_REFERENCE.out.beagle_ref
+    //    beagle_map = BEAGLE_REFERENCE.out.beagle_map
+    //}
     //
     // SUBWORKFLOW: SNV_CALLING: Call SNVs
     //
+
+    println "The samples: "
+    ch_sample.view()
+
     SNV_CALLING(
         ch_sample, 
         ref, 
@@ -150,6 +158,7 @@ workflow ACESEQ {
     //
     // SUBWORKFLOW: PREPROCESSING
     //  
+
     PREPROCESSING(
         SNV_CALLING.out.all_cnv,
         rep_time,
@@ -215,7 +224,7 @@ workflow ACESEQ {
                         .join(haploblocks_ch)
                         .join(SNV_CALLING.out.ch_sex)
                         .set{segments_ch}  
-        segments_ch.view()
+        
         SEGMENTATION(
             PREPROCESSING.out.windows_corrected,
             PREPROCESSING.out.qual_corrected,

@@ -102,7 +102,7 @@ workflow PHASING_Y {
     )
     versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
     ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
-  
+
     // Prepare moch haploblock file for chrX
     tmp = combined_inputs.map {it -> tuple( it[0], it[1])}
 
@@ -128,21 +128,20 @@ workflow PHASING_Y {
     //
     // MODULE:BEAGLE 
     // 
-    // Run beagle for Chr 1-22 chrX if female
+    // Run beagle for Chr 1-22 and chrX if female
     // OTP runs have impute working! Beagle is new. 
     BEAGLE5_BEAGLE(
         CREATE_FAKE_SAMPLES.out.unphased_vcf,
         beagle_ref,
         beagle_map,
         chr_prefix
-
     )
     versions = versions.mix(BEAGLE5_BEAGLE.out.versions)
-
     // Prepare input channel  matching meta and interval
     BEAGLE5_BEAGLE.out.vcf
-                        .join(ch_unphased, by: [0, 1])
-                        .set{ch_embed}
+                    .join(ch_unphased, by: [0, 1])
+                    .set{ch_embed}
+
     //
     // MODULE:EMBED_HAPLOTYPES 
     // 

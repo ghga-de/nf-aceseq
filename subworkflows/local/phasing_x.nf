@@ -110,7 +110,7 @@ workflow PHASING_X {
         ch_unphased
     )
     versions = versions.mix(CREATE_FAKE_SAMPLES.out.versions)
-  
+
     //
     // MODULE:BEAGLE 
     // 
@@ -121,13 +121,14 @@ workflow PHASING_X {
         beagle_ref,
         beagle_map,
         chr_prefix
-
     )
-
+    versions = versions.mix(BEAGLE5_BEAGLE.out.versions)
     // Prepare input channel  matching meta and interval
     BEAGLE5_BEAGLE.out.vcf
-                        .join(ch_unphased, by: [0, 1])
-                        .set{ch_embed}
+                    .join(ch_unphased, by: [0, 1])
+                    .set{ch_embed}
+    
+
     //
     // MODULE:EMBED_HAPLOTYPES 
     // 
