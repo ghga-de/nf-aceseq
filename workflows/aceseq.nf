@@ -28,16 +28,20 @@ ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists
 
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
-chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) 
+chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true).collect() 
                                                 : Channel.empty()   
-rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true) 
+rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true).collect() 
                                                 : Channel.empty() 
-gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true) 
+gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true).collect() 
                                                 : Channel.empty() 
-centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true) 
+centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true).collect() 
                                                 : Channel.empty() 
-cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true) 
+cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true).collect() 
                                                 : Channel.empty() 
+// Beagle references
+beagle_ref     = Channel.fromPath(params.beagle_ref , type: 'dir',checkIfExists: true )                               
+                                                
+plink_map      = Channel.fromPath(params.plink_map , type: 'dir', checkIfExists: true )
 
 // Annotation files
 
@@ -45,14 +49,8 @@ dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp
                                                 : Channel.of([],[])                                        
 mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
-// Beagle references
-beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference, checkIfExists: true )                               
-                                                : Channel.empty()
-                                                
-beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map, checkIfExists: true )
-                                                : Channel.empty()    
 // Blacklist        
-blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
+blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true ).collect()
                                                 : Channel.empty()   
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,7 +99,6 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 //
 
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
-include { BEAGLE_REFERENCE  } from '../modules/local/beagle_reference.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -132,17 +129,10 @@ workflow ACESEQ {
         GETCHROMSIZES(ref)
         chrlength   = GETCHROMSIZES.out.sizes
     }
-    //if (!params.beagle_ref | !params.beagle_map){
-    //    BEAGLE_REFERENCE(ref)
-    //    beagle_ref = BEAGLE_REFERENCE.out.beagle_ref
-    //    beagle_map = BEAGLE_REFERENCE.out.beagle_map
-    //}
-    //
-    // SUBWORKFLOW: SNV_CALLING: Call SNVs
-    //
 
-    println "The samples: "
-    ch_sample.view()
+    //println "The samples: "
+    //ch_sample.view()
+    beagle_ref.view()
 
     SNV_CALLING(
         ch_sample, 
@@ -193,7 +183,7 @@ workflow ACESEQ {
             ref, 
             chrlength,
             beagle_ref,
-            beagle_map,
+            plink_map,
             dbsnpsnv,
             chrprefix
         )
@@ -207,7 +197,7 @@ workflow ACESEQ {
             ref, 
             chrlength,
             beagle_ref,
-            beagle_map,
+            plink_map,
             dbsnpsnv,
             chrprefix
         )

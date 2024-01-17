@@ -33,13 +33,13 @@ process BEAGLE5_BEAGLE {
         avail_mem = (task.memory.mega*0.8).intValue()
     }
     
-    """
+    """ 
     beagle -Xmx${avail_mem}M \\
         gt=${vcf} \\
         out=${prefix} \\
         $args \\
-        ref=\$(find $refpanel/ -name "*${add_prefix}${intervals}.*.${params.beagle_ref_ext}") \\
-        map=\$(find $genmap/ -name "*${add_prefix}${intervals}.*.${params.beagle_map_ext}")
+        ref=\$(find $refpanel/ -name "*${add_prefix}${intervals}.*") \\
+        map=\$(find $genmap/ -name "*${add_prefix}${intervals}.*")
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
