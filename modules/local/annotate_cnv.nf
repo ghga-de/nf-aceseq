@@ -26,6 +26,7 @@ process ANNOTATE_CNV {
     """
     annotate_vcf.pl \\
         -a $cnv \\
+        $args \\
         --aFileType=custom \\
 	    --aChromColumn chr \\
 	    --aPosColumn pos \\

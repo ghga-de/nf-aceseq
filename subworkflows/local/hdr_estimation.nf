@@ -13,6 +13,7 @@ workflow HDR_ESTIMATION {
     sexfile       // channel: [val(meta), path(sexfile.txt)]
     centromers    // channel: [centromers.txt] 
     cytobands     // channel: [cytobands.txt]
+    chrprefix     // channel: [chromosome prefix value]
 
 
     main:
@@ -27,7 +28,8 @@ workflow HDR_ESTIMATION {
         input_ch.join(sexfile),
         blacklist,
         centromers,
-        cytobands
+        cytobands,
+        chrprefix
     )
     versions  = versions.mix(ESTIMATE_HDRSCORE.out.versions) 
 

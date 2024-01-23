@@ -28,29 +28,29 @@ ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists
 
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
-chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true).collect() 
+chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true)
                                                 : Channel.empty()   
-rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true).collect() 
+rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true)
                                                 : Channel.empty() 
-gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true).collect() 
+gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true)
                                                 : Channel.empty() 
-centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true).collect() 
+centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true)
                                                 : Channel.empty() 
-cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true).collect() 
+cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true) 
                                                 : Channel.empty() 
 // Beagle references
-beagle_ref     = Channel.fromPath(params.beagle_ref , type: 'dir',checkIfExists: true )                               
-                                                
-plink_map      = Channel.fromPath(params.plink_map , type: 'dir', checkIfExists: true )
-
+beagle_ref     = params.beagle_ref              ? Channel.fromPath(params.beagle_ref + "/*chr*", checkIfExists: true )
+                                                : Channel.empty()                                                                            
+plink_map      = params.plink_map               ? Channel.fromPath(params.plink_map + "/*chr*" , checkIfExists: true )
+                                                : Channel.empty()   
 // Annotation files
 
-dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
+dbsnpsnv            = params.dbsnp_snv          ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])                                        
 mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
 // Blacklist        
-blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true ).collect()
+blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
                                                 : Channel.empty()   
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,6 +99,8 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 //
 
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_1  } from '../modules/local/prepare_beagle_ref.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_2  } from '../modules/local/prepare_beagle_ref.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,8 +133,7 @@ workflow ACESEQ {
     }
 
     //println "The samples: "
-    //ch_sample.view()
-    beagle_ref.view()
+    ch_sample.view()
 
     SNV_CALLING(
         ch_sample, 
@@ -177,13 +178,31 @@ workflow ACESEQ {
             other: true}
             .set{sex}
 
+        if(params.beagle_ref){
+            beagle_ref.map{it -> tuple ([id:"beagle"], it) }.groupTuple().set{beagle_ref_ch}
+        }
+        
+         if(params.plink_map){
+            plink_map.map{it -> tuple ([id:"plink"], it) }.groupTuple().set{plink_map_ch}
+        }    
+
+        PREPARE_BEAGLE_REF_1(
+            beagle_ref_ch,
+            "beagle_dir"
+            )
+
+        PREPARE_BEAGLE_REF_2(
+            plink_map_ch,
+            "plink_dir"
+            )
         // Run phasing for female samples
+        
         PHASING_X(
             sex.female,
             ref, 
             chrlength,
-            beagle_ref,
-            plink_map,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
             dbsnpsnv,
             chrprefix
         )
@@ -196,8 +215,8 @@ workflow ACESEQ {
             sex.male,
             ref, 
             chrlength,
-            beagle_ref,
-            plink_map,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
             dbsnpsnv,
             chrprefix
         )
@@ -251,7 +270,8 @@ workflow ACESEQ {
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
-            cytobands
+            cytobands,
+            chrprefix
         )
     }
     else{
