@@ -30,7 +30,6 @@ process CLUSTER_SEGMENTS {
     manual_pruning.R \\
         --file  $snp_update1 \\
         --segments  $segments_w_homodel \\
-        --out . \\
         --segOut    ${prefix}_clustered_and_pruned_and_normal.txt \\
         --min_seg_length    $params.min_seg_length_prune \\
         --clustering_YN $params.clustering \\
@@ -45,8 +44,7 @@ process CLUSTER_SEGMENTS {
         --gcCovWidthFile  $gc_corrected \\
         --chrLengthFile   $chrlenght \\
         --pid   ${prefix} \\
-        --libloc  "" \\
-        --runInDebugMode  false
+        $args
 
     # Not sure why there is a NULL line in the end of the segments file
     zcat ${prefix}_all_seg2.txt.gz  | grep -v NULL | bgzip -f > ${prefix}_all_seg_2.txt.gz.2

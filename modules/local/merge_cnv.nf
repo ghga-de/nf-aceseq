@@ -25,11 +25,11 @@ process MERGE_CNV {
     """
     merge_and_filter_cnv.py \\
         --inputpath "${prefix_in}.${chr_prefix}" \\
-        --inputsuffix ".cnv.anno.tab.gz" \\
         --output ${prefix}.cnv.tab.gz \\
         --coverage $params.cnv_min_coverage \\
         --mappability $params.mapping_quality \\
-        --NoOfWindows  $params.min_windows 
+        --NoOfWindows  $params.min_windows \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

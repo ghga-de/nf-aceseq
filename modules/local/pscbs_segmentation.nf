@@ -32,9 +32,9 @@ process PSCBS_SEGMENTATION {
         --minwidth  $params.min_seg_width \\
         --undo.SD   $params.undo_SD \\
         -h  $params.pscbs_prune_height \\
-        --libloc    "" \\
         $allowsv \\
-        $nocontrol
+        $nocontrol \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

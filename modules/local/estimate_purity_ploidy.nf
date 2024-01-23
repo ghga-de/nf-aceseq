@@ -26,7 +26,6 @@ process ESTIMATE_PURITY_PLOIDY {
         --file_sex    $sexfile \\
         --segments  $segments \\
         --purity_ploidy    ${prefix}_ploidy_purity_2D.txt \\
-        --out   . \\
         --min_length_purity $params.min_length_purity \\
         --min_hetSNPs_purity    $params.min_hetSNPs_purity \\
         --dh_Stop   $params.dh_stop \\
@@ -37,7 +36,8 @@ process ESTIMATE_PURITY_PLOIDY {
         --ploidy_min    $params.ploidy_min \\
         --ploidy_max    $params.ploidy_max \\
         --pid   $prefix \\
-        --local_minium_upper_boundary_shift $params.local_minium_upper_boundary_shift
+        --local_minium_upper_boundary_shift $params.local_minium_upper_boundary_shift \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

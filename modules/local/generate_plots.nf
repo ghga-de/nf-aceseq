@@ -33,13 +33,13 @@ process GENERATE_PLOTS {
         --outfile ${prefix}_plot \\
         --chrLengthFile $chrlenght \\
         --corrected $all_corrected \\
-        --outDir . \\
         --pp $purity_ploidy \\
         --file_sex $sex_file \\
         --ID $prefix \\
         --ymaxcov_threshold $params.ymaxcov_threshold \\
         --annotatePlotsWithGenes $params.annotatePlotsWithGenes \\
-        $allowsv
+        $allowsv \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

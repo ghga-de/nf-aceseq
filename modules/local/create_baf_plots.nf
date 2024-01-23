@@ -28,7 +28,7 @@ process CREATE_BAF_PLOTS {
         --file_sex  $sexfile \\
         --chrLengthFile $chrlenght \\
         --pid $prefix \\
-        --plot_Dir .
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -18,7 +18,6 @@ process GROUP_HAPLOTYPES {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def chr_suff      = chr_prefix == "chr" ? "" : "chr"
     def interval_name = intervals == "${chr_prefix}X" ? "${chr_suff}${chr_prefix}23" : "${chr_suff}" + "${intervals}"

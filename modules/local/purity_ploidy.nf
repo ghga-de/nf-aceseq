@@ -23,9 +23,9 @@ process PURITY_PLOIDY {
     """
     getFinalPurityPloidy.py \\
         --pid   $prefix \\
-        --path  .  \\
         --out   ${prefix}_parameter.json \\
-        --solutionFile  $purity_ploidy
+        --solutionFile  $purity_ploidy \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

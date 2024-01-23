@@ -17,7 +17,6 @@ process PREPARE_BEAGLE_REF {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
 
     """
     mkdir $name
