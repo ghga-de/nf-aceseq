@@ -34,7 +34,7 @@ process DEFINE_BREAKPOINTS {
         --file_centromeres  $centromers \\
         --file_data ${prefix}_pscbs_data.txt.gz \\
         --min_gap_length $params.min_gap_length \\
-        --libloc    ""           
+        $args           
 
         tabix -f -s 2 -b 1 --comment a ${prefix}_pscbs_data.txt.gz
 

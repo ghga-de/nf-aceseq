@@ -27,7 +27,7 @@ process ESTIMATE_PEAKS {
         --gender    $sexfile \\
         --segments  $clusteredsegments \\
         --segOut    ${prefix}_combi_level.txt \\
-        --out   .
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
