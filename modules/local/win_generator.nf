@@ -1,5 +1,5 @@
 process WIN_GENERATOR {
-    tag "$meta.id chr$intervals" 
+    tag "$meta.id $intervals" 
     label 'process_low'
 
     conda (params.enable_conda ? "" : null)

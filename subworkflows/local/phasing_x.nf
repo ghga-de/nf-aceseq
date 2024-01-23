@@ -22,7 +22,7 @@ workflow PHASING_X {
     ref           // channel: [path(fasta), path(fai)]
     chrlength     // channel: [[chr, region], [chr, region], ...]
     beagle_ref    // channel: directory
-    beagle_map    // channel: directory
+    plink_map     // channel: directory
     dbsnp         // channel: [path(dbsnp), path(index)]
     chr_prefix    // channel: val: chr|""
 
@@ -110,7 +110,7 @@ workflow PHASING_X {
         ch_unphased
     )
     versions = versions.mix(CREATE_FAKE_SAMPLES.out.versions)
-  
+    
     //
     // MODULE:BEAGLE 
     // 
@@ -119,15 +119,17 @@ workflow PHASING_X {
     BEAGLE5_BEAGLE(
         CREATE_FAKE_SAMPLES.out.unphased_vcf,
         beagle_ref,
-        beagle_map,
+        plink_map,
         chr_prefix
-
     )
+    versions = versions.mix(BEAGLE5_BEAGLE.out.versions)
 
     // Prepare input channel  matching meta and interval
     BEAGLE5_BEAGLE.out.vcf
-                        .join(ch_unphased, by: [0, 1])
-                        .set{ch_embed}
+                    .join(ch_unphased, by: [0, 1])
+                    .set{ch_embed}
+    
+
     //
     // MODULE:EMBED_HAPLOTYPES 
     // 

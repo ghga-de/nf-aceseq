@@ -25,31 +25,30 @@ if (params.fake_control){
 
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
+
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
-chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) 
+chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true)
                                                 : Channel.empty()   
-rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true) 
+rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true)
                                                 : Channel.empty() 
-gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true) 
+gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true)
                                                 : Channel.empty() 
-centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true) 
+centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true)
                                                 : Channel.empty() 
 cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true) 
                                                 : Channel.empty() 
-
+// Beagle references
+beagle_ref     = params.beagle_ref              ? Channel.fromPath(params.beagle_ref + "/*chr*", checkIfExists: true )
+                                                : Channel.empty()                                                                            
+plink_map      = params.plink_map               ? Channel.fromPath(params.plink_map + "/*chr*" , checkIfExists: true )
+                                                : Channel.empty()   
 // Annotation files
 
-dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
+dbsnpsnv            = params.dbsnp_snv          ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])                                        
 mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
-// Beagle references
-beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference, checkIfExists: true )                               
-                                                : Channel.empty()
-                                                
-beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map, checkIfExists: true )
-                                                : Channel.empty()    
 // Blacklist        
 blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
                                                 : Channel.empty()   
@@ -100,6 +99,8 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 //
 
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_1  } from '../modules/local/prepare_beagle_ref.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_2  } from '../modules/local/prepare_beagle_ref.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,15 +128,13 @@ workflow ACESEQ {
         //
         // MODULE: Prepare chromosome size file if not provided
         //
-        GETCHROMSIZES(
-            ref
-            )
-        ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
+        GETCHROMSIZES(ref)
         chrlength   = GETCHROMSIZES.out.sizes
     }
-    //
-    // SUBWORKFLOW: SNV_CALLING: Call SNVs
-    //
+
+    //println "The samples: "
+    ch_sample.view()
+
     SNV_CALLING(
         ch_sample, 
         ref, 
@@ -150,6 +149,7 @@ workflow ACESEQ {
     //
     // SUBWORKFLOW: PREPROCESSING
     //  
+
     PREPROCESSING(
         SNV_CALLING.out.all_cnv,
         rep_time,
@@ -178,13 +178,31 @@ workflow ACESEQ {
             other: true}
             .set{sex}
 
+        if(params.beagle_ref){
+            beagle_ref.map{it -> tuple ([id:"beagle"], it) }.groupTuple().set{beagle_ref_ch}
+        }
+        
+         if(params.plink_map){
+            plink_map.map{it -> tuple ([id:"plink"], it) }.groupTuple().set{plink_map_ch}
+        }    
+
+        PREPARE_BEAGLE_REF_1(
+            beagle_ref_ch,
+            "beagle_dir"
+            )
+
+        PREPARE_BEAGLE_REF_2(
+            plink_map_ch,
+            "plink_dir"
+            )
         // Run phasing for female samples
+        
         PHASING_X(
             sex.female,
             ref, 
             chrlength,
-            beagle_ref,
-            beagle_map,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
             dbsnpsnv,
             chrprefix
         )
@@ -197,8 +215,8 @@ workflow ACESEQ {
             sex.male,
             ref, 
             chrlength,
-            beagle_ref,
-            beagle_map,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
             dbsnpsnv,
             chrprefix
         )
@@ -215,7 +233,7 @@ workflow ACESEQ {
                         .join(haploblocks_ch)
                         .join(SNV_CALLING.out.ch_sex)
                         .set{segments_ch}  
-        segments_ch.view()
+        
         SEGMENTATION(
             PREPROCESSING.out.windows_corrected,
             PREPROCESSING.out.qual_corrected,
@@ -252,7 +270,8 @@ workflow ACESEQ {
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
-            cytobands
+            cytobands,
+            chrprefix
         )
     }
     else{
