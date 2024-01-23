@@ -19,7 +19,7 @@ process MERGE_SNP {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def snp_min_coverage = meta.iscontrol == "" ? "${params.snp_min_coverage}" : "0"
+    def snp_min_coverage = meta.iscontrol == "1" ? "${params.snp_min_coverage}" : "0"
 
     """
     merge_and_filter_snp.py \\

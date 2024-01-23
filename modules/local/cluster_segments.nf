@@ -43,7 +43,8 @@ process CLUSTER_SEGMENTS {
         --sex $sexfile \\
         --gcCovWidthFile  $gc_corrected \\
         --chrLengthFile   $chrlenght \\
-        --pid   ${prefix}
+        --pid   ${prefix} \\
+        $args
 
     # Not sure why there is a NULL line in the end of the segments file
     zcat ${prefix}_all_seg2.txt.gz  | grep -v NULL | bgzip -f > ${prefix}_all_seg_2.txt.gz.2
