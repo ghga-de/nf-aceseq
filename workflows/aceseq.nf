@@ -16,31 +16,39 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
+fake_control = Channel.empty()
+// If no control case is active, check for existance of fake controls
+if (params.fake_control){
+    fake_control   = Channel.fromPath(params.fake_control + '/'+ params.fake_control_prefix +'*.cnv.anno.tab.gz', checkIfExists: true ).collect() 
+}  
+
+
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
-chr_prefix     = Channel.value(params.chr_prefix)
-chrlength      = params.chrom_sizes           ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-rep_time       = params.replication_time_file ? Channel.fromPath(params.replication_time_file, checkIfExists: true) : Channel.empty() 
-gc_content     = params.gc_content_file       ? Channel.fromPath(params.gc_content_file, checkIfExists: true) : Channel.empty() 
-centromers     = params.centromer_file        ? Channel.fromPath(params.centromer_file, checkIfExists: true) : Channel.empty() 
 
-if (params.fasta.contains("38")){
-    ref_type = "hg38"   
-}
-else{
-    ref_type = "hg37"
-}
+chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
+chrlength      = params.chrom_sizes             ? Channel.fromPath(params.chrom_sizes, checkIfExists: true)
+                                                : Channel.empty()   
+rep_time       = params.replication_time_file   ? Channel.fromPath(params.replication_time_file, checkIfExists: true)
+                                                : Channel.empty() 
+gc_content     = params.gc_content_file         ? Channel.fromPath(params.gc_content_file, checkIfExists: true)
+                                                : Channel.empty() 
+centromers     = params.centromer_file          ? Channel.fromPath(params.centromer_file, checkIfExists: true)
+                                                : Channel.empty() 
+cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true) 
+                                                : Channel.empty() 
+// Beagle references
+beagle_ref     = params.beagle_ref              ? Channel.fromPath(params.beagle_ref + "/*chr*" + params.beagle_ref_ext, checkIfExists: true )
+                                                : Channel.empty()                                                                            
+plink_map      = params.plink_map               ? Channel.fromPath(params.plink_map + "/*chr*" + params.plink_map_ext , checkIfExists: true )
+                                                : Channel.empty()   
+// Annotation files
 
-dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
+dbsnpsnv            = params.dbsnp_snv          ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])                                        
 mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
-// Beagle references
-beagle_ref          = params.beagle_reference   ? Channel.fromPath(params.beagle_reference + '/ALL.*.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.CHR.bref3', checkIfExists: true ).collect()                                   
-                                                : Channel.empty()
-beagle_map          = params.beagle_genetic_map ? Channel.fromPath(params.beagle_genetic_map + '/plink.*.GRCh38.CHR.map', checkIfExists: true ).collect() 
-                                                : Channel.empty()    
 // Blacklist        
 blacklist           = params.blacklist_file     ? Channel.fromPath(params.blacklist_file , checkIfExists: true )
                                                 : Channel.empty()   
@@ -65,12 +73,13 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK              } from '../subworkflows/local/input_check'
-include { MPILEUP_SNV_CNV_CALL     } from '../subworkflows/local/mpileup_snv_cnv_call'
-include { PHASING                  } from '../subworkflows/local/phasing'
-include { CORRECT_GC_BIAS          } from '../subworkflows/local/correct_gc_bias'
-include { BREAKPOINTS_SEGMENTS     } from '../subworkflows/local/breakpoints_segments'
-include { PLOTS_REPORTS            } from '../subworkflows/local/plots_reports'
+include { SNV_CALLING              } from '../subworkflows/local/snv_calling'
+include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
+include { SEGMENTATION             } from '../subworkflows/local/segmentation'
+include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
 include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
+include { PHASING_X                } from '../subworkflows/local/phasing_x'
+include { PHASING_Y                } from '../subworkflows/local/phasing_y'
 
 
 /*
@@ -89,9 +98,9 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 // MODULE: Local Modules
 //
 
-include { GREP_SAMPLENAME   } from '../modules/local/grep_samplename.nf'
 include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
-include { CREATE_UNPHASED   } from '../modules/local/create_unphased.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_1  } from '../modules/local/prepare_beagle_ref.nf'
+include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_2  } from '../modules/local/prepare_beagle_ref.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,124 +122,161 @@ workflow ACESEQ {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    ch_sample = INPUT_CHECK.out.ch_sample
 
     if ( !params.chrom_sizes) {
         //
         // MODULE: Prepare chromosome size file if not provided
         //
-        GETCHROMSIZES(
-            ref
-            )
-        ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
+        GETCHROMSIZES(ref)
         chrlength   = GETCHROMSIZES.out.sizes
     }
 
-    //
-    // MODULE: Extract sample name from BAM
-    //
-    GREP_SAMPLENAME(
-        INPUT_CHECK.out.ch_sample
-    )
-    ch_versions = ch_versions.mix(GREP_SAMPLENAME.out.versions)
+    //println "The samples: "
+    ch_sample.view()
 
-    // Prepare an input channel of sample with sample names
-    name_ch   = GREP_SAMPLENAME.out.samplenames
-    INPUT_CHECK.out.ch_sample.join(name_ch)
-                            .set{sample_ch}
-
-    //
-    // SUBWORKFLOW: MPILEUP_SNV_CNV_CALL: Call SNVs
-    //
-    MPILEUP_SNV_CNV_CALL(
-        sample_ch, 
+    SNV_CALLING(
+        ch_sample, 
         ref, 
         chrlength,
         dbsnpsnv,
-        mapability
+        mapability,
+        chrprefix,
+        fake_control
     )
-    ch_versions    = ch_versions.mix(MPILEUP_SNV_CNV_CALL.out.versions)
+    ch_versions    = ch_versions.mix(SNV_CALLING.out.versions)
 
     //
-    // SUBWORKFLOW: CORRECT_GC_BIAS
+    // SUBWORKFLOW: PREPROCESSING
     //  
-    CORRECT_GC_BIAS(
-        MPILEUP_SNV_CNV_CALL.out.all_cnv,
+
+    PREPROCESSING(
+        SNV_CALLING.out.all_cnv,
         rep_time,
         chrlength,
         gc_content
     )
-    ch_versions  = ch_versions.mix(CORRECT_GC_BIAS.out.versions)
+    ch_versions  = ch_versions.mix(PREPROCESSING.out.versions)
 
-    //
-    // SUBWORKFLOW: PHASING: Call mpileup and beagle
-    //
+    if (!params.runQualityCheckOnly){
 
-    PHASING(
-        sample_ch,
-        MPILEUP_SNV_CNV_CALL.out.all_snp, 
-        ref, 
-        chrlength,
-        beagle_ref,
-        beagle_map,
-        dbsnpsnv,
-        MPILEUP_SNV_CNV_CALL.out.ch_sex
-    )
-    ch_versions     = ch_versions.mix(PHASING.out.versions)
+        snp_haplotypes_ch = Channel.empty()
+        haploblocks_ch    = Channel.empty()
+        
+        //
+        // SUBWORKFLOW: PHASING: Call mpileup and beagle
+        //
+            
+        // brach samples for sexes
+        // discuss about klinefelter case (XXY)
+        // if female or klinefelter
+        sex_sample_ch = ch_sample.join(SNV_CALLING.out.ch_sex)
+        ch_sample     = sex_sample_ch.join(SNV_CALLING.out.all_snp) 
+        ch_sample.branch{
+            male:  it[5].readLines().get(0) == "male"
+            female: it[5].readLines().get(0) == "female" || it[5].readLines().get(0) == "klinefelter"
+            other: true}
+            .set{sex}
 
-    //
-    // SUBWORKFLOW: BREAKPOINTS_SEGMENTS: 
-    //
-    BREAKPOINTS_SEGMENTS(
-        CORRECT_GC_BIAS.out.windows_corrected,
-        CORRECT_GC_BIAS.out.qual_corrected,
-        PHASING.out.ch_snp_haplotypes,
-        PHASING.out.ch_haploblocks,
-        MPILEUP_SNV_CNV_CALL.out.ch_sex,
-        centromers,
-        chrlength,
-        mapability
-    )
-    ch_versions     = ch_versions.mix(BREAKPOINTS_SEGMENTS.out.versions)
+        if(params.beagle_ref){
+            beagle_ref.map{it -> tuple ([id:"beagle"], it) }.groupTuple().set{beagle_ref_ch}
+        }
+        
+         if(params.plink_map){
+            plink_map.map{it -> tuple ([id:"plink"], it) }.groupTuple().set{plink_map_ch}
+        }    
 
-    //
-    // SUBWORKFLOW: PLOTS_REPORTS: 
-    //
-    PLOTS_REPORTS(
-        BREAKPOINTS_SEGMENTS.out.ch_sv_points,
-        BREAKPOINTS_SEGMENTS.out.ch_all_snp_update3,
-        BREAKPOINTS_SEGMENTS.out.ch_purity_ploidy,
-        BREAKPOINTS_SEGMENTS.out.ch_segment_w_peaks,
-        MPILEUP_SNV_CNV_CALL.out.ch_sex,
-        CORRECT_GC_BIAS.out.all_corrected,
-        chrlength
-    )
-    ch_versions     = ch_versions.mix(PLOTS_REPORTS.out.versions)
+        PREPARE_BEAGLE_REF_1(
+            beagle_ref_ch,
+            "beagle_dir"
+            )
 
-    //
-    // SUBWORKFLOW: HDR_ESTIMATION: 
-    //
+        PREPARE_BEAGLE_REF_2(
+            plink_map_ch,
+            "plink_dir"
+            )
+        // Run phasing for female samples
+        
+        PHASING_X(
+            sex.female,
+            ref, 
+            chrlength,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
+            dbsnpsnv,
+            chrprefix
+        )
+        ch_versions       = ch_versions.mix(PHASING_X.out.versions)
+        snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_X.out.ch_snp_haplotypes)
+        haploblocks_ch    = haploblocks_ch.mix(PHASING_X.out.ch_haploblocks)
 
-    HDR_ESTIMATION(
-        PLOTS_REPORTS.out.json_report,
-        blacklist,
-        MPILEUP_SNV_CNV_CALL.out.ch_sex,
-        centromers
-    )
+        // Run phasing for male samples
+        PHASING_Y(
+            sex.male,
+            ref, 
+            chrlength,
+            PREPARE_BEAGLE_REF_1.out.dir,
+            PREPARE_BEAGLE_REF_2.out.dir,
+            dbsnpsnv,
+            chrprefix
+        )
+        ch_versions     = ch_versions.mix(PHASING_Y.out.versions)
+        snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_Y.out.ch_snp_haplotypes)
+        haploblocks_ch    = haploblocks_ch.mix(PHASING_Y.out.ch_haploblocks)
+        
+        //
+        // SUBWORKFLOW: SEGMENTATION: 
+        //
+        PREPROCESSING.out.windows_corrected
+                        .join(PREPROCESSING.out.qual_corrected)
+                        .join(snp_haplotypes_ch)
+                        .join(haploblocks_ch)
+                        .join(SNV_CALLING.out.ch_sex)
+                        .set{segments_ch}  
+        
+        SEGMENTATION(
+            PREPROCESSING.out.windows_corrected,
+            PREPROCESSING.out.qual_corrected,
+            snp_haplotypes_ch,
+            haploblocks_ch,
+            SNV_CALLING.out.ch_sex,
+            centromers,
+            chrlength,
+            mapability,
+            chrprefix
+        )
+        ch_versions     = ch_versions.mix(SEGMENTATION.out.versions)
 
-    //// createUnphasedFiles.sh /////
-    
-    // WARN: this is probably needed for no-control samples!    
-    //
-    // MODULE: CREATE_UNPHASED
-    //
-    // Run annotateCNA.pl and parseVcf.pl to generate X (if male) and Y unphased VCFs
-    CREATE_UNPHASED(
-        MPILEUP_SNV_CNV_CALL.out.all_snp,
-        dbsnpsnv
-    )
-    unphased_x  = CREATE_UNPHASED.out.x_unphased
-    unphased_y  = CREATE_UNPHASED.out.y_unphased
-    ch_versions = ch_versions.mix(CREATE_UNPHASED.out.versions)
+        //
+        // SUBWORKFLOW: PURITY_EVALUATION: 
+        //
+        PURITY_EVALUATION(
+            SEGMENTATION.out.ch_clustered_segments,
+            SEGMENTATION.out.ch_sv_points,
+            SEGMENTATION.out.ch_all_snp_update3,
+            SNV_CALLING.out.ch_sex,
+            PREPROCESSING.out.all_corrected,
+            chrlength
+        )
+        ch_versions     = ch_versions.mix(PURITY_EVALUATION.out.versions)
+
+        //
+        // SUBWORKFLOW: HDR_ESTIMATION: 
+        //
+
+        HDR_ESTIMATION(
+            PURITY_EVALUATION.out.json_report,
+            PURITY_EVALUATION.out.hdr_files,
+            blacklist,
+            SNV_CALLING.out.ch_sex,
+            centromers,
+            cytobands,
+            chrprefix
+        )
+    }
+    else{
+        println "Only quality check is performed since runQualityCheckOnly is set to ${params.runQualityCheckOnly}"
+    }
 
     //
     // MODULE: CUSTOM_DUMPSOFTWAREVERSIONS
@@ -240,28 +286,34 @@ workflow ACESEQ {
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    //
-    // MODULE: MultiQC
-    //
-    workflow_summary    = WorkflowAceseq.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
+    if (!params.skip_multiqc){
+        //
+        // MODULE: MultiQC
+        //
+        workflow_summary    = WorkflowAceseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
 
-    methods_description    = WorkflowAceseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
-    ch_methods_description = Channel.value(methods_description)
+        methods_description    = WorkflowAceseq.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description)
+        ch_methods_description = Channel.value(methods_description)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = Channel.empty()
+        ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
+        ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
+        MULTIQC (
+            ch_multiqc_files.collect(),
+            ch_multiqc_config.toList(),
+            ch_multiqc_custom_config.toList(),
+            ch_multiqc_logo.toList()
+        )
+        multiqc_report = MULTIQC.out.report.toList()
+
+    }
+    else{
+        println "Skipping MultiQC"
+    }
+
 }
 
 /*

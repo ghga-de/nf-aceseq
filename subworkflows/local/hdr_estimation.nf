@@ -3,45 +3,35 @@
 //
 
 params.options = [:]
-include { READ_JSON        } from '../../modules/local/read_json.nf'               addParams( options: params.options )
-include { PARSE_JSON       } from '../../modules/local/parse_json.nf'              addParams( options: params.options )
-
-import groovy.json.JsonSlurper
+include { ESTIMATE_HDRSCORE       } from '../../modules/local/estimate_hdrscore.nf'              addParams( options: params.options )
 
 workflow HDR_ESTIMATION {
     take:
     json_report   // channel: [val(meta), path(.json)]
+    hdr_files     // channel: [val(meta), [path(.txt), path(.txt)..]]
     blacklist     // channel: [blacklist.txt]
     sexfile       // channel: [val(meta), path(sexfile.txt)]
     centromers    // channel: [centromers.txt] 
+    cytobands     // channel: [cytobands.txt]
+    chrprefix     // channel: [chromosome prefix value]
 
 
     main:
     versions = Channel.empty()
 
     //
-    // MODULE:PARSE_JSON
+    // MODULE:ESTIMATE_HDRSCORE
     //
     // RUN parseJson.py
-    PARSE_JSON(
-        json_report.join(sexfile),
+    input_ch =  json_report.join(hdr_files)
+    ESTIMATE_HDRSCORE(
+        input_ch.join(sexfile),
         blacklist,
-        centromers
+        centromers,
+        cytobands,
+        chrprefix
     )
-    versions  = versions.mix(PARSE_JSON.out.versions) 
-
-    //
-    // MODULE:READ_JSON
-    //
-    READ_JSON(
-        json_report
-    )
-
-    ch_sol = READ_JSON.out.metaMap
-
-    ch_sol.view()
-
-
+    versions  = versions.mix(ESTIMATE_HDRSCORE.out.versions) 
 
     emit:
     versions

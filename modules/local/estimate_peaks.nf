@@ -4,7 +4,7 @@ process ESTIMATE_PEAKS {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v4':'kubran/odcf_aceseqcalling:v4' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
     tuple val(meta), path(snps_update_3), path(index), path(clusteredsegments), path(sexfile)
@@ -27,7 +27,7 @@ process ESTIMATE_PEAKS {
         --gender    $sexfile \\
         --segments  $clusteredsegments \\
         --segOut    ${prefix}_combi_level.txt \\
-        --out   .
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

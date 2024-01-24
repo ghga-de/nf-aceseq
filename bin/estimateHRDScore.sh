@@ -2,7 +2,7 @@ set -euo pipefail
 # Copyright (c) 2017 The ACEseq workflow developers.
 # Distributed under the MIT License (license terms are at https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
-usage() { echo "Usage: $0 [-p pid] [-i jsonfile] [-m legacyMode] [-b blacklistFileName] [-s sexfile] [-c centromers]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-p pid] [-i jsonfile] [-m legacyMode] [-b blacklistFileName] [-s sexfile] [-c centromers] [-y cytobandsFile]" 1>&2; exit 1; }
 
 while [[ $# -gt 0 ]]
 do
@@ -38,6 +38,11 @@ do
 			shift # past argument
 	    	shift # past value
 			;;
+		-y)
+			cytobandsFile=$2
+			shift # past argument
+	    	shift # past value
+			;;		
 	esac
 done
 
@@ -62,10 +67,10 @@ do
 
     if [[ ${legacyMode} == 'true' ]]; then
         # replace 'crest' column name by the new name 'SV.Type'
-        cat ${COMBPROFILE_FIFO} | awk 'BEGIN{ FS="\t"; OFS="\t" } FNR==1{ for (col=1; col<=NF; ++col) if ($col == "crest") $col = "SV.Type"; } {print}' >$combProFile.txt &
+        cat ${COMBPROFILE_FIFO} | awk 'BEGIN{ FS="\t"; OFS="\t" } FNR==1{ for (col=1; col<=NF; ++col) if ($col == "crest") $col = "SV.Type"; } {print}' >$combProFile.tmp &
         pid_legacyMode=$!
     else
-        cat ${COMBPROFILE_FIFO} >$combProFile.txt &
+        cat ${COMBPROFILE_FIFO} >$combProFile.tmp &
         pid_legacyMode=$!
 	fi
 
@@ -73,6 +78,7 @@ do
 				     -a $combProFile -b $blacklistFileName \
 				     >${COMBPROFILE_FIFO}
 
+	echo "bedtools intersect done"
 
 	if [[ "$?" != 0 ]]
 	then
@@ -83,18 +89,19 @@ do
     rm ${COMBPROFILE_FIFO}
 
 	#smooth Data
-	removeBreakpoints.py -f $combProFile.txt -o $combProFile.txt.txt
+	removeBreakpoints.py -f $combProFile.tmp -o $combProFile.tmp.tmp
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code while removing breakpoints (first time)" && exit 2
-	mv $combProFile.txt.txt $combProFile.txt
-	mergeArtifacts.py -f $combProFile.txt -o $combProFile.txt.txt
+	mv $combProFile.tmp.tmp $combProFile.tmp
+	mergeArtifacts.py -f $combProFile.tmp -o $combProFile.tmp.tmp
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code while merging artifacts" && exit 2
-	mv $combProFile.txt.txt $combProFile.txt
-	removeBreakpoints.py -f $combProFile.txt -o $combProFile.txt.txt
+	mv $combProFile.tmp.tmp $combProFile.tmp
+	removeBreakpoints.py -f $combProFile.tmp -o $combProFile.tmp.tmp
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code while removing breakpoints (second time)" && exit 2
-	mv $combProFile.txt.txt $combProFile.txt
+	mv $combProFile.tmp.tmp $combProFile.tmp
 
+	echo "smooth data done"
 
-	(head -1 $combProFile.txt ; tail -n +2 $combProFile.txt | sort -k 1,1 -V -k 2,2n ) >$combProFileNoArtifacts
+	(head -1 $combProFile.tmp ; tail -n +2 $combProFile.tmp | sort -k 1,1 -V -k 2,2n ) >$combProFileNoArtifacts
 
 	if [[ "$?" != 0 ]]
 	then
@@ -103,16 +110,15 @@ do
 	fi
 
 	#this file could be written out and sorted according to chromosomes
-	smoothData.py -f $combProFile.txt  -o $combProFile.txt.txt && mv $combProFile.txt.txt $combProFile.txt  && \
-	removeBreakpoints.py -f $combProFile.txt -o $combProFile.txt.txt && mv $combProFile.txt.txt $combProFile.txt
+	smoothData.py -f $combProFile.tmp -l $legacyMode  -o $combProFile.tmp.tmp && mv $combProFile.tmp.tmp $combProFile.tmp && \
+	removeBreakpoints.py -f $combProFile.tmp -o $combProFile.tmp.tmp && mv $combProFile.tmp.tmp $combProFile.tmp
 	if [[ "$?" != 0 ]]
 	then
 		echo "There was a non-zero exit code while smoothing segments" 
 		exit 2
 	fi
 
-
-    patientsex=`cat ${sexfile:-iDoNotExist.txt}`
+	echo "remove breaks done"
 
 	if [[ "$?" != 0 ]]
 	then
@@ -120,26 +126,22 @@ do
 		exit 2
 	fi
 
-	HRDFile=${pid}_HRDscore_${ploidyFactor}_${tcc}.txt
-	HRD_DETAILS_FILE=${pid}_HRDscore_contributingSegments_${ploidyFactor}_${tcc}.txt
-	LST_DETAILS_FILE=${pid}_LSTscore_contributingSegments_${ploidyFactor}_${tcc}.CentromerReduced.txt
-	MERGED_REDUCED_FILE=${pid}_comb_pro_extra${ploidyFactor}_${tcc}.smoothed.CentromerReduced.txt
-
+	echo "before hdr estimation"
 	HRD_estimation.R \
-		 $combProFileNoArtifacts \
-		 ${combProFile}.txt \
-		 $patientsex \
-		 $ploidy \
-		 $tcc \
-		 $pid \
-		 ${HRDFile}.txt \
-		 ${HRD_DETAILS_FILE}.txt \
-		 ${LST_DETAILS_FILE}.txt \
-		 ${MERGED_REDUCED_FILE}.txt \
-		 ${centromers} \
-		 ${cytobandsFile} \
-		 .
-
+		$combProFileNoArtifacts \
+		${combProFile}.tmp \
+		$gender \
+		$ploidy \
+		$tcc \
+		$pid \
+		${pid}_HRDscore_${ploidyFactor}_${tcc}.txt \
+		${pid}_HRDscore_contributingSegments_${ploidyFactor}_${tcc}.txt \
+		${pid}_LSTscore_contributingSegments_${ploidyFactor}_${tcc}.CentromerReduced.txt \
+		${pid}_comb_pro_extra${ploidyFactor}_${tcc}.smoothed.CentromerReduced.txt \
+		${centromers} \
+		${cytobandsFile} \
+		.
+	echo "after hdr estimation"
 
 	if [[ "$?" != 0 ]]
 	then
@@ -147,7 +149,7 @@ do
 		exit 2
 	fi
 
-	(head -1 $combProFile.txt ; tail -n +2 $combProFile.txt | sort -k 1,1 -V -k 2,2n ) \
+	(head -1 $combProFile.tmp ; tail -n +2 $combProFile.tmp | sort -k 1,1 -V -k 2,2n ) \
 		>$combProFileNew
 
 	if [[ "$?" != 0 ]]
@@ -156,11 +158,6 @@ do
 		exit 2
 	fi
 
-	mv ${HRDFile}.txt ${HRDFile}
-	mv ${HRD_DETAILS_FILE}.txt ${HRD_DETAILS_FILE}
-	mv ${LST_DETAILS_FILE}.txt ${LST_DETAILS_FILE}
-	mv ${MERGED_REDUCED_FILE}.txt ${MERGED_REDUCED_FILE}
-	rm ${combProFile}.txt
 done
 if [[ "$?" != 0 ]]
 then

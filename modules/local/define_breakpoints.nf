@@ -1,7 +1,7 @@
 //This only works with v0
 process DEFINE_BREAKPOINTS {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -33,7 +33,8 @@ process DEFINE_BREAKPOINTS {
         --file_knownSegments ${prefix}.knownSegments.txt \\
         --file_centromeres  $centromers \\
         --file_data ${prefix}_pscbs_data.txt.gz \\
-        --libloc    ""           
+        --min_gap_length $params.min_gap_length \\
+        $args           
 
         tabix -f -s 2 -b 1 --comment a ${prefix}_pscbs_data.txt.gz
 

@@ -4,10 +4,11 @@ process MERGE_SNP {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
     tuple val(meta), path(snp)
+    val(chr_prefix)
 
     output:
     tuple val(meta), path("*.snp.tab.gz"), path("*.snp.tab.gz.tbi")   , emit: snp 
@@ -17,13 +18,12 @@ process MERGE_SNP {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def snp_min_coverage = meta.iscontrol == "" ? "${params.snp_min_coverage}" : "0"
+    def snp_min_coverage = meta.iscontrol == "1" ? "${params.snp_min_coverage}" : "0"
 
     """
     merge_and_filter_snp.py \\
-        --inputpath "${prefix}.chr" \\
+        --inputpath "${prefix}.${chr_prefix}" \\
         --inputsuffix ".snp.tab.gz" \\
         --output ${prefix}.snp.tab.gz \\
         --coverage $snp_min_coverage

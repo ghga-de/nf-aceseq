@@ -1,6 +1,6 @@
 process BCFTOOLS_MPILEUP {
-    tag "$meta.id"
-    label 'process_high'
+    tag "$meta.id $intervals"
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -22,32 +22,21 @@ process BCFTOOLS_MPILEUP {
     def args     = task.ext.args ?: ''
     def args2    = task.ext.args2 ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
-    
-    if (meta.iscontrol == '1') {
-        """
-        bcftools \\
-            mpileup \\
-            -O u \\
-            --fasta-ref $fasta \\
-            $args \\
-            -r ${intervals} \\
-            $control \\
-            | bcftools call $args2 - > ${prefix}.${intervals}.unphased.vcf
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
-        END_VERSIONS
-        """
-    }
-    else{
-        """
-        touch ${prefix}.${intervals}.vcf
+    """
+    bcftools \\
+        mpileup \\
+        -O u \\
+        --fasta-ref $fasta \\
+        $args \\
+        -r ${intervals} \\
+        $control \\
+        | bcftools call $args2 - > ${prefix}.${intervals}.unphased.vcf
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
-        END_VERSIONS
-        """       
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
+    END_VERSIONS
+    """ 
+
 }

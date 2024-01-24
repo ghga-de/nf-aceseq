@@ -1,0 +1,2 @@
+sample,sex,sv,tumor,tumor_index,control,control_index
+test,female,,testdata/SEQC2_LL1_T_small.bam,testdata/SEQC2_LL1_T_small.bam.bai,testdata/SEQC2_LL1_C_small.bam,testdata/SEQC2_LL1_C_small.bam.bai

@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(description ="list all genes with their CNV sta
 parser.add_argument( '--file',	'-f', type=file, help="segment file with copy number information" )
 parser.add_argument( '--out',	'-o', default=sys.stdout, type=str,  help='outputfile' )
 parser.add_argument( '--maxDistToNext',	'-m', default=1000, type=int,  help='maximum allowed distance between segments to be merged' )
+parser.add_argument( '--legacyMode',	'-l', default='true', type=str,  help='' )
 # maxDistToNext is used only used for first segments [in chromosome | after large gap]
 
 
@@ -26,6 +27,7 @@ parser.add_argument( '--maxDistToNext',	'-m', default=1000, type=int,  help='max
 
 args = parser.parse_args()
 maxDistToNext=args.maxDistToNext
+legacyMode = args.legacyMode
 out = args.out
 cutoff = 0.5
 maxLen = 3000000
@@ -159,8 +161,6 @@ def merge_first_segment(prior_line, newline):
 		prior_line["length"] = int(int(prior_line["end"]) - int(prior_line["start"]) +1 )
 		return(prior_line)
 
-	
-
 if __name__ == "__main__":
 	#read first two lines of file before looping over all lines
 	prior_line = infile.readline()
@@ -234,7 +234,13 @@ if __name__ == "__main__":
 			prior_line = merge_gap(prior_line, newline)
 			newline=None
 
-	#print last line(s)
-	out.write( "\t".join( str(prior_line[key]) for key in infile.header ) + "\n" ) 
-	if newline:
-		out.write( "\t".join( str(newline[key]) for key in infile.header ) + "\n" ) 
+	if (legacyMode == "true"):
+		#print last line(s)
+		out.write( "\t".join( str(prior_line[key]) for key in infile.header ) + "\n" ) 
+		if newline:
+			out.write( "\t".join( str(newline[key]) for key in infile.header ) + "\n" )	
+	else:
+		#print last line(s)
+		out.write( "\t".join( str(prior_line[0][key]) for key in infile.header ) + "\n" ) 
+		if newline:
+			out.write( "\t".join( str(newline[0][key]) for key in infile.header ) + "\n" )	

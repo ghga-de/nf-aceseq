@@ -1,19 +1,20 @@
 // This needs to run per cnv.tab.gz !
 process ANNOTATE_CNV {
-    tag "$meta.id"
-    label 'process_medium'
+    tag "$meta.id $intervals"
+    label 'process_high_cpu_low_memory'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+    'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
     tuple val(meta), val(intervals)  , path(cnv)
     tuple path(mappability)          , path(index)
 
     output:
-    tuple val(meta), path('*.cnv.anno.tab.gz')  , emit: annotated_cnv
-    path  "versions.yml"                        , emit: versions
+    tuple val(meta), path('*.cnv.anno.tab.gz')                  , emit: annotated_cnv
+    tuple val(meta), val(intervals), path('*.cnv.anno.tab.gz')  , emit: tmp_cnv
+    path  "versions.yml"                                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,6 +26,7 @@ process ANNOTATE_CNV {
     """
     annotate_vcf.pl \\
         -a $cnv \\
+        $args \\
         --aFileType=custom \\
 	    --aChromColumn chr \\
 	    --aPosColumn pos \\
