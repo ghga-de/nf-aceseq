@@ -24,6 +24,8 @@ params.chrom_sizes  = WorkflowMain.getGenomeAttribute(params, 'chrom_sizes')
 params.contig_file  = WorkflowMain.getGenomeAttribute(params, 'contig_file')
 params.beagle_ref   = WorkflowMain.getGenomeAttribute(params, 'beagle_ref')
 params.plink_map    = WorkflowMain.getGenomeAttribute(params, 'plink_map')
+params.beagle_ref_ext  = WorkflowMain.getGenomeAttribute(params, 'beagle_ref_ext')
+params.plink_map_ext   = WorkflowMain.getGenomeAttribute(params, 'plink_map_ext')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -37,9 +37,9 @@ process BEAGLE5_BEAGLE {
     beagle -Xmx${avail_mem}M \\
         gt=${vcf} \\
         out=${prefix} \\
-        $args \\
         ref=\$(find $refpanel/ -name "*${add_prefix}${intervals}.*") \\
-        map=\$(find $genmap/ -name "*${add_prefix}${intervals}.*")
+        map=\$(find $genmap/ -name "*${add_prefix}${intervals}.*") \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

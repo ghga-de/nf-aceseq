@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description ="list all genes with their CNV sta
 parser.add_argument( '--file',	'-f', type=file, help="segment file with copy number information" )
 parser.add_argument( '--out',	'-o', default=sys.stdout, type=str,  help='outputfile' )
 parser.add_argument( '--maxDistToNext',	'-m', default=1000, type=int,  help='maximum allowed distance between segments to be merged' )
-parser.add_argument( '--chr_prefix',	'-p', default='chr', type=str,  help='' )
+parser.add_argument( '--legacyMode',	'-l', default='true', type=str,  help='' )
 # maxDistToNext is used only used for first segments [in chromosome | after large gap]
 
 
@@ -27,7 +27,7 @@ parser.add_argument( '--chr_prefix',	'-p', default='chr', type=str,  help='' )
 
 args = parser.parse_args()
 maxDistToNext=args.maxDistToNext
-chr_prefix = args.chr_prefix
+legacyMode = args.legacyMode
 out = args.out
 cutoff = 0.5
 maxLen = 3000000
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 			prior_line = merge_gap(prior_line, newline)
 			newline=None
 
-	if (chr_prefix == "chr"):
+	if (legacyMode == "true"):
 		#print last line(s)
 		out.write( "\t".join( str(prior_line[key]) for key in infile.header ) + "\n" ) 
 		if newline:

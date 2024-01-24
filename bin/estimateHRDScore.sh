@@ -2,7 +2,7 @@ set -euo pipefail
 # Copyright (c) 2017 The ACEseq workflow developers.
 # Distributed under the MIT License (license terms are at https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
-usage() { echo "Usage: $0 [-p pid] [-i jsonfile] [-m legacyMode] [-b blacklistFileName] [-s sexfile] [-c centromers] [-y cytobandsFile] [-x chrprefix]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-p pid] [-i jsonfile] [-m legacyMode] [-b blacklistFileName] [-s sexfile] [-c centromers] [-y cytobandsFile]" 1>&2; exit 1; }
 
 while [[ $# -gt 0 ]]
 do
@@ -40,11 +40,6 @@ do
 			;;
 		-y)
 			cytobandsFile=$2
-			shift # past argument
-	    	shift # past value
-			;;
-		-x)
-			chrprefix=$2
 			shift # past argument
 	    	shift # past value
 			;;		
@@ -115,7 +110,7 @@ do
 	fi
 
 	#this file could be written out and sorted according to chromosomes
-	smoothData.py -f $combProFile.tmp -p $chrprefix  -o $combProFile.tmp.tmp && mv $combProFile.tmp.tmp $combProFile.tmp && \
+	smoothData.py -f $combProFile.tmp -l $legacyMode  -o $combProFile.tmp.tmp && mv $combProFile.tmp.tmp $combProFile.tmp && \
 	removeBreakpoints.py -f $combProFile.tmp -o $combProFile.tmp.tmp && mv $combProFile.tmp.tmp $combProFile.tmp
 	if [[ "$?" != 0 ]]
 	then

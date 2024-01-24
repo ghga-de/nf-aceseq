@@ -9,9 +9,9 @@
 Main swiches:
 
 - --runQualityCheckOnly: If true, runs **only** SNV calling and preprocessing. No CNV processing performs afterwards. Default: false
-- --estimatesex        : If true, sex estimation will be performed. If sex is not defined in samplesheet,estimatesex automaticaly be performed. For no control samples, sex cannot be estimated.  Default: true
-- --createbafplots     : If true, BAF plots will be created. Default: true
-- --skip_multiqc       : If true, skips MultiQC.
+- --estimatesex : If true, sex estimation will be performed. If sex is not defined in samplesheet,estimatesex automaticaly be performed. For no control samples, sex cannot be estimated. Default: true
+- --createbafplots : If true, BAF plots will be created. Default: true
+- --skip_multiqc : If true, skips MultiQC.
 
 Reference Files:
 
@@ -21,10 +21,10 @@ Reference Files:
 - --chr_prefix: 'chr' or ''
 - --chrlenght: path/to/chrlength.tsv, tab seperated chromosome positions
 - --contig_file: path/to/contig_file.tsv, tab seperated contigpositions
-- --beagle_reference: path/to/Beagle/1000genomes/ , directory must include beagle reference files per chromosome. HG38 reference system assumes chr prefix on files. 
-- --beagle_genetic_map: path/to/databases/genetic_maps/ , directory must include beagle genetic map files per chromosome. HG38 reference system assumes chr prefix on files. 
-- --beagle_ref_ext: beagle reference extention:  vcf | bref | bref3
-- --beagle_map_ext: beagle map file extention:   map | plink
+- --beagle_reference: path/to/Beagle/1000genomes/ , directory must include beagle reference files per chromosome. HG38 reference system assumes chr prefix on files.
+- --beagle_genetic_map: path/to/databases/genetic_maps/ , directory must include beagle genetic map files per chromosome. HG38 reference system assumes chr prefix on files.
+- --beagle_ref_ext: beagle reference extention: vcf | bref | bref3
+- --beagle_map_ext: beagle map file extention: map | plink
 
 Annotation Files:
 
@@ -34,17 +34,17 @@ Annotation Files:
 - --gc_content_file: GC content (.txt, .bed)
 - --gene_annotation_file: Druggable genes (.tsv, .bed)
 - --centromer_file: Centromer regions (.bed, .txt)
-- --blacklist_file: Artifact regions (.bed, .txt)  
+- --blacklist_file: Artifact regions (.bed, .txt)
 - --cytobands_file: Cytoband regions (.bed, .txt)
 
 Parameters:
 
 - Mpileup Options
 
---mpileup_qual: quality used for parameter ‘Q’ in samtools mpileup. Minimum base quality. Default: 0 
-    
+--mpileup_qual: quality used for parameter ‘Q’ in samtools mpileup. Minimum base quality. Default: 0
+
 - Phasing options
-  
+
 --minHT: Minumum HT.minimum number of consecutive SNPs to be considered for haploblocks. Default: 5
 
 - SNV Merge filter
@@ -72,12 +72,12 @@ Parameters:
 - Breakpoints and gaps options
 
 --min_DDI_length: minimum length for DEL/DUP/INV to be considered for breakpoint integration. Default 1000
---selSVColumn: column from bedpe file to be recored in ${pid}_sv_points.txt file. Default "eventScore"
+--selSVColumn: column from bedpe file to be recored in ${pid}\_sv_points.txt file. Default "eventScore"
 
 - PSCBS options
 
 --min_seg_width: segmentByPairedPSCBS() minwidth parameter in PSCBS R package. Default 2000
---undo_SD: segmentByPairedPSCBS() undo.SD parameter in PSCBS R package. Default  24
+--undo_SD: segmentByPairedPSCBS() undo.SD parameter in PSCBS R package. Default 24
 --pscbs_prune_height: pruneByHClust() parameter h in PSCBS R package. Default 0
 --min_gap_length: Default 9000
 
@@ -95,11 +95,11 @@ Parameters:
 --min_distance: Default 0.05
 
 - estimate Purity Ploidy
-    
+
 --minLim: Default 0.47
 --maxLim: Default 0.53
 --min_length_purity: minimum length of segments to be considered for tumor cell content and ploidy estimation. Default 1000000
---min_hetSNPs_purity: minimum number of control heterozygous SNPs in segments to be considered for tumor cell content and ploidy estimation. Default 5000    
+--min_hetSNPs_purity: minimum number of control heterozygous SNPs in segments to be considered for tumor cell content and ploidy estimation. Default 5000  
 --dh_stop: Default "max"
 --min_length_dh_stop: Default 1000000
 --dh_zero: Default "no"
@@ -124,7 +124,7 @@ You will need to create a samplesheet with information about the samples you wou
 ### Full samplesheet
 
 Below is an example for the same sample sequenced across 7 lanes:
-Note: If there is no control, sex must be defined. Pipeline will auto-detect if there is no control. 
+Note: If there is no control, sex must be defined. Pipeline will auto-detect if there is no control.
 
 ```console
 sample,sex,sv,tumor,tumor_bai,control,control_bai
@@ -136,16 +136,15 @@ sample5,female,svfile.tsv,sample5_tumor.bam,sample5_tumor.bai,,
 
 ```
 
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be used to name the output files and output directories. |
-| `sex` | Sex of the sample, male | female | klinefelter (optional) |
-| `sv` | Full path to SV file (optional)|
-| `tumor` | Full path to tumor sample BAM file |
-| `tumor_bai` | Full path to tumor sample BAI file |
-| `control` | Full path to control sample BAM file (optional)|
-| `control_bai` | Full path to control sample BAI file (optional) |
+| Column        | Description                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------- | ------ | ---------------------- |
+| `sample`      | Custom sample name. This entry will be used to name the output files and output directories. |
+| `sex`         | Sex of the sample, male                                                                      | female | klinefelter (optional) |
+| `sv`          | Full path to SV file (optional)                                                              |
+| `tumor`       | Full path to tumor sample BAM file                                                           |
+| `tumor_bai`   | Full path to tumor sample BAI file                                                           |
+| `control`     | Full path to control sample BAM file (optional)                                              |
+| `control_bai` | Full path to control sample BAI file (optional)                                              |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
@@ -168,7 +167,6 @@ work                # Directory containing the nextflow working files
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
 
-
 ## Core Nextflow arguments
 
 > **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
@@ -177,8 +175,7 @@ work                # Directory containing the nextflow working files
 
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
-
-> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility. Conda usage is not possible for this pipeline. 
+> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility. Conda usage is not possible for this pipeline.
 
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
@@ -210,7 +207,6 @@ In most cases, you will only need to create a custom config as a one-off but if 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
-
 
 ## Running in the background
 

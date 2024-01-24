@@ -39,9 +39,9 @@ centromers     = params.centromer_file          ? Channel.fromPath(params.centro
 cytobands      = params.cytobands_file          ? Channel.fromPath(params.cytobands_file, checkIfExists: true) 
                                                 : Channel.empty() 
 // Beagle references
-beagle_ref     = params.beagle_ref              ? Channel.fromPath(params.beagle_ref + "/*chr*", checkIfExists: true )
+beagle_ref     = params.beagle_ref              ? Channel.fromPath(params.beagle_ref + "/*chr*" + params.beagle_ref_ext, checkIfExists: true )
                                                 : Channel.empty()                                                                            
-plink_map      = params.plink_map               ? Channel.fromPath(params.plink_map + "/*chr*" , checkIfExists: true )
+plink_map      = params.plink_map               ? Channel.fromPath(params.plink_map + "/*chr*" + params.plink_map_ext , checkIfExists: true )
                                                 : Channel.empty()   
 // Annotation files
 

@@ -22,7 +22,7 @@ process ESTIMATE_HDRSCORE {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def chrprefix = chr_prefix == "chr" ?: "no"
+    def chrprefix = chr_prefix == "chr" ? "chr": "no"
 
     """
     estimateHRDScore.sh \\
@@ -32,9 +32,8 @@ process ESTIMATE_HDRSCORE {
         -b $blacklist \\
         -s $sexfile \\
         -c $centromers \\
-        -y $cytobands \\
-        -x $chrprefix
-
+        -y $cytobands 
+        
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python2 --version 2>&1 | sed 's/Python //g')
