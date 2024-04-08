@@ -1,4 +1,4 @@
-process ESTIMATE_HDRSCORE {
+process ESTIMATE_HRDSCORE {
     tag "$meta.id"
     label 'process_single'
 

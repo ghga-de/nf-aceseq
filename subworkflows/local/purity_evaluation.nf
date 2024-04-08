@@ -69,7 +69,7 @@ workflow PURITY_EVALUATION {
         ch_input,
         chrlength
     )
-    hdr_files = GENERATE_PLOTS.out.hdr_estimate_files
+    hrd_files = GENERATE_PLOTS.out.hrd_estimate_files
     versions  = versions.mix(GENERATE_PLOTS.out.versions)
 
     //
@@ -83,6 +83,6 @@ workflow PURITY_EVALUATION {
 
     emit:
     json_report
-    hdr_files
+    hrd_files
     versions
 }

@@ -77,7 +77,7 @@ include { SNV_CALLING              } from '../subworkflows/local/snv_calling'
 include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
 include { SEGMENTATION             } from '../subworkflows/local/segmentation'
 include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
-include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
+include { HRD_ESTIMATION           } from '../subworkflows/local/hrd_estimation'
 include { PHASING_X                } from '../subworkflows/local/phasing_x'
 include { PHASING_Y                } from '../subworkflows/local/phasing_y'
 
@@ -261,18 +261,19 @@ workflow ACESEQ {
         ch_versions     = ch_versions.mix(PURITY_EVALUATION.out.versions)
 
         //
-        // SUBWORKFLOW: HDR_ESTIMATION: 
+        // SUBWORKFLOW: HRD_ESTIMATION: 
         //
 
-        HDR_ESTIMATION(
+        HRD_ESTIMATION(
             PURITY_EVALUATION.out.json_report,
-            PURITY_EVALUATION.out.hdr_files,
+            PURITY_EVALUATION.out.hrd_files,
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
             cytobands,
             chrprefix
         )
+        ch_versions     = ch_versions.mix(HRD_ESTIMATION.out.versions)
     }
     else{
         println "Only quality check is performed since runQualityCheckOnly is set to ${params.runQualityCheckOnly}"
