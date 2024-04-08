@@ -11,7 +11,6 @@ process ESTIMATE_HRDSCORE {
     each path(blacklist)
     each path(centromers)
     each path(cytobands)
-    val(chr_prefix)
 
     output:
     tuple val(meta), path("*.txt")        , emit: txt
@@ -22,7 +21,6 @@ process ESTIMATE_HRDSCORE {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def chrprefix = chr_prefix == "chr" ? "chr": "no"
 
     """
     estimateHRDScore.sh \\

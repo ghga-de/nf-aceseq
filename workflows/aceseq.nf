@@ -270,8 +270,7 @@ workflow ACESEQ {
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
-            cytobands,
-            chrprefix
+            cytobands
         )
         ch_versions     = ch_versions.mix(HRD_ESTIMATION.out.versions)
     }

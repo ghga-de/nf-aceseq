@@ -15,6 +15,6 @@ test_output/
 tests/data/
 work/
 .github/CODEOWNERS-tmp
-bin/__init__.pyc
-bin/Options.pyc
-bin/Tabfile.pyc
+bin/python_modules/__init__.pyc
+bin/python_modules/Options.pyc
+bin/python_modules/Tabfile.pyc
