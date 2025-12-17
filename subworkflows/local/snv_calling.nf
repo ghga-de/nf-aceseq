@@ -15,7 +15,7 @@ include { FAKE_CONTROL     } from '../../modules/local/fake_control.nf'         
 
 workflow SNV_CALLING {
     take:
-    ch_sample     // channel: [val(meta), tumor,tumor_bai, control, control_bai]
+    ch_sample     // channel: [val(meta), tumor, tumor_bai, control, control_bai]
     ref           // channel: [path(fasta), path(fai)]
     chrlength     // channel: [[chr, region], [chr, region], ...]
     dbsnp         // channel: [dbsnp, index]
@@ -139,7 +139,6 @@ workflow SNV_CALLING {
     // MODULE: MERGE_CNV
     //
     // Runs merge_and_filter_cnv.py
-    
     MERGE_CNV (
         ch_anno_cnv, // tuple val(meta)  , path(cnvs)
         chr_prefix

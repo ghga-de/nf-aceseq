@@ -16,6 +16,7 @@ include { SEGMENTS_TO_DATA as SEGMENTS_TO_SNP     } from '../../modules/local/se
 
 workflow SEGMENTATION {
     take:
+    ch_sv           // channel: [val(meta), path(sv)]
     gc_corr_win     // channel: [val(meta), path(cnv_corrected_win tab.gz)]
     gc_corr_qual    // channel: [val(meta), path(cnv_corrected_qual tab)]
     snp_pos_haplo_wg// channel: [val(meta), path(snp haplotypes tab.gz), path(index)]
@@ -57,7 +58,7 @@ workflow SEGMENTATION {
     //
     // RUN PSCBSgabs_plus_sv_points.py to add SVs to PSCBSgaps
     ADD_SVS(
-        DEFINE_BREAKPOINTS.out.known_segments
+        ch_sv.join(DEFINE_BREAKPOINTS.out.known_segments)
     )
     versions    = versions.mix(ADD_SVS.out.versions)
 
@@ -67,8 +68,9 @@ workflow SEGMENTATION {
     //
     // Run PSCBSgabs_plus_CRESTpoints.py
     ch_sv_points = ADD_SVS.out.sv_points
-    ch_sv_points.join(ADD_SVS.out.breakpoints)
-                .map {it -> tuple( it[0], it[1], it[2], [], [])} 
+    ch_sv.join(ch_sv_points)
+        .join(ADD_SVS.out.breakpoints)
+                .map {it -> tuple( it[0], it[1], it[2], it[3], [], [])} 
                 .set{crest_ch}
     ADD_CREST(
         crest_ch

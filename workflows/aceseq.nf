@@ -72,14 +72,15 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK              } from '../subworkflows/local/input_check'
-include { SNV_CALLING              } from '../subworkflows/local/snv_calling'
-include { PREPROCESSING            } from '../subworkflows/local/preprocessing'
-include { SEGMENTATION             } from '../subworkflows/local/segmentation'
-include { PURITY_EVALUATION        } from '../subworkflows/local/purity_evaluation'
-include { HDR_ESTIMATION           } from '../subworkflows/local/hdr_estimation'
-include { PHASING_X                } from '../subworkflows/local/phasing_x'
-include { PHASING_Y                } from '../subworkflows/local/phasing_y'
+include { paramsSummaryMap          } from 'plugin/nf-schema'
+include { samplesheetToList         } from 'plugin/nf-schema'
+include { SNV_CALLING               } from '../subworkflows/local/snv_calling'
+include { PREPROCESSING             } from '../subworkflows/local/preprocessing'
+include { SEGMENTATION              } from '../subworkflows/local/segmentation'
+include { PURITY_EVALUATION         } from '../subworkflows/local/purity_evaluation'
+include { HDR_ESTIMATION            } from '../subworkflows/local/hdr_estimation'
+include { PHASING_X                 } from '../subworkflows/local/phasing_x'
+include { PHASING_Y                 } from '../subworkflows/local/phasing_y'
 
 
 /*
@@ -115,14 +116,18 @@ workflow ACESEQ {
 
     ch_versions = Channel.empty()
 
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    ch_sample = INPUT_CHECK.out.ch_sample
+    // Check mandatory parameters
+    if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
+    // Validate and convert to channel
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map { meta, tumor, tumor_index, control, control_index, sv ->    
+            def is_control_present = control ? 1 : 0
+            def new_meta = meta + [ iscontrol: is_control_present ]
+            return [ new_meta, tumor, tumor_index, control, control_index, sv]
+        }
+        .set { ch_sample }
 
     if ( !params.chrom_sizes) {
         //
@@ -132,11 +137,8 @@ workflow ACESEQ {
         chrlength   = GETCHROMSIZES.out.sizes
     }
 
-    //println "The samples: "
-    ch_sample.view()
-
     SNV_CALLING(
-        ch_sample, 
+        ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, tumor, tumor_index, control, control_index]}, 
         ref, 
         chrlength,
         dbsnpsnv,
@@ -145,7 +147,7 @@ workflow ACESEQ {
         fake_control
     )
     ch_versions    = ch_versions.mix(SNV_CALLING.out.versions)
-
+    
     //
     // SUBWORKFLOW: PREPROCESSING
     //  
@@ -170,13 +172,24 @@ workflow ACESEQ {
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
         // if female or klinefelter
-        sex_sample_ch = ch_sample.join(SNV_CALLING.out.ch_sex)
-        ch_sample     = sex_sample_ch.join(SNV_CALLING.out.all_snp) 
-        ch_sample.branch{
-            male:  it[5].readLines().get(0) == "male"
-            female: it[5].readLines().get(0) == "female" || it[5].readLines().get(0) == "klinefelter"
-            other: true}
-            .set{sex}
+        ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, tumor, tumor_index, control, control_index]}
+                .join(SNV_CALLING.out.ch_sex)
+                .join(SNV_CALLING.out.all_snp)
+                .set{ch_phasing}
+
+        // update meta.sex
+        ch_phasing = ch_phasing.map { meta, tumor, t_idx, control, c_idx, sex_file, snp, snp_idx ->   
+            def detected_sex = sex_file.text.trim()
+            def new_meta = meta + [ sex: detected_sex ]
+            return [ new_meta, tumor, t_idx, control, c_idx, sex_file, snp, snp_idx ]
+        }
+
+        ch_phasing.branch{
+            male:   it[0].sex == "male"
+            female: it[0].sex == "female" || it[0].sex == "klinefelter"
+            other:  true
+        }
+        .set{ sex }
 
         if(params.beagle_ref){
             beagle_ref.map{it -> tuple ([id:"beagle"], it) }.groupTuple().set{beagle_ref_ch}
@@ -195,8 +208,9 @@ workflow ACESEQ {
             plink_map_ch,
             "plink_dir"
             )
+
         // Run phasing for female samples
-        
+     
         PHASING_X(
             sex.female,
             ref, 
@@ -235,6 +249,7 @@ workflow ACESEQ {
                         .set{segments_ch}  
         
         SEGMENTATION(
+            ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, sv]}, 
             PREPROCESSING.out.windows_corrected,
             PREPROCESSING.out.qual_corrected,
             snp_haplotypes_ch,
@@ -263,7 +278,6 @@ workflow ACESEQ {
         //
         // SUBWORKFLOW: HDR_ESTIMATION: 
         //
-
         HDR_ESTIMATION(
             PURITY_EVALUATION.out.json_report,
             PURITY_EVALUATION.out.hdr_files,

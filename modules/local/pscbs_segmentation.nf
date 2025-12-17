@@ -20,7 +20,7 @@ process PSCBS_SEGMENTATION {
     script:
     def args      = task.ext.args ?: ''
     def prefix    = task.ext.prefix ?: "${meta.id}"
-    def nocontrol = meta.iscontrol == "1" ? "" : "--nocontrol TRUE"
+    def nocontrol = meta.iscontrol == 1 ? "" : "--nocontrol TRUE"
     def allowsv = "${meta.missingsv}" == "1" ?"--sv false":"--sv true"
 
     """

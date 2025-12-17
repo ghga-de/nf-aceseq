@@ -47,16 +47,16 @@ workflow PHASING_X {
     combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[8])}
 
     combined_inputs.branch{
-        control: it[0].iscontrol == "1"
-        nocontrol: it[0].iscontrol == "0"}
+        control: it[0].iscontrol == 1
+        nocontrol: it[0].iscontrol == 0}
         .set{input_ch}
 
     sample_ch.map{it -> tuple( it[0],it[6],it[7])}
                     .set{all_snp}
 
     all_snp.branch{
-        control: it[0].iscontrol == "1"
-        nocontrol: it[0].iscontrol == "0"}
+        control: it[0].iscontrol == 1
+        nocontrol: it[0].iscontrol == 0}
         .set{all_snp_ch}
 
     ch_all_snp = ch_all_snp.mix(all_snp_ch.control)
@@ -183,8 +183,8 @@ workflow PHASING_X {
         //
 
         ch_snp_haplotypes.branch{
-            control: it[0].iscontrol == "1"
-            nocontrol: it[0].iscontrol == "0"}
+            control: it[0].iscontrol == 1
+            nocontrol: it[0].iscontrol == 0}
             .set{snp_hap}
 
         sexfile = sample_ch.map {it -> tuple( it[0], it[5])}

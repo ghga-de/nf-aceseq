@@ -22,7 +22,7 @@ workflow PURITY_EVALUATION {
     main:
     versions = Channel.empty()
 
-        //// purityPloidity.sh ////
+    //// purityPloidity.sh ////
     //
     // MODULE: ESTIMATE_PEAKS
     //

@@ -22,7 +22,7 @@ process ESTIMATE_SEX {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     if (params.estimatesex) {
-        if (meta.iscontrol == '1'){
+        if (meta.iscontrol == 1){
             """
             getSex.R \\
             --file_dataY ${prefix}.${chr_prefix}Y.cnv.tab.gz \\

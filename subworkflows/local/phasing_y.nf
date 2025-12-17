@@ -32,7 +32,6 @@ workflow PHASING_Y {
     ch_unphased  = Channel.empty()
     ch_all_snp   = Channel.empty()
     
-
     // Combine intervals with samples to create 'interval x sample' number of parallel run
     intervals  = chrlength.splitCsv(sep: '\t', by:1)
 
@@ -49,15 +48,15 @@ workflow PHASING_Y {
     combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4],it[8])} 
 
     combined_inputs.branch{
-        control: it[0].iscontrol == "1"
-        nocontrol: it[0].iscontrol == "0"}
+        control: it[0].iscontrol == 1
+        nocontrol: it[0].iscontrol == 0}
         .set{input_ch}
 
     sample_ch.map{it -> tuple( it[0],it[6],it[7])}
                     .set{all_snp}
     all_snp.branch{
-        control: it[0].iscontrol == "1"
-        nocontrol: it[0].iscontrol == "0"}
+        control: it[0].iscontrol == 1
+        nocontrol: it[0].iscontrol == 0}
         .set{all_snp_ch}
 
     ch_all_snp = ch_all_snp.mix(all_snp_ch.control)
@@ -66,7 +65,6 @@ workflow PHASING_Y {
     //
     // MODULE: GET_GENOTYPES
     //
-    
     GET_GENOTYPES(
         all_snp_ch.nocontrol
     )
@@ -90,7 +88,6 @@ workflow PHASING_Y {
         .set{unphased}
         
     ch_unphased = ch_unphased.mix(unphased)
-
 
     //
     // MODULE:BCFTOOLS_MPILEUP 
@@ -198,8 +195,8 @@ workflow PHASING_Y {
         //
 
         ch_snp_haplotypes.branch{
-            control: it[0].iscontrol == "1"
-            nocontrol: it[0].iscontrol == "0"}
+            control: it[0].iscontrol == 1
+            nocontrol: it[0].iscontrol == 0}
             .set{snp_hap}
 
         sexfile = sample_ch.map {it -> tuple( it[0], it[5])}

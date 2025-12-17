@@ -19,7 +19,6 @@ workflow PREPROCESSING {
     versions = Channel.empty()
     
     ///// correct_gc_bias.sh ////
-    cnv_pos.view()
     //
     // MODULE: GC_BIAS
     //

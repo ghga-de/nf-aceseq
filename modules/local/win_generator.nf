@@ -20,7 +20,7 @@ process WIN_GENERATOR {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def control_param = meta.iscontrol == "1" ? "" : "--withoutcontrol"
+    def control_param = meta.iscontrol == 1 ? "" : "--withoutcontrol"
 
     """
     snp_cnv.py \\
