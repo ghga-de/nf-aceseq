@@ -21,7 +21,7 @@ process ADD_CREST {
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (sv) {
+    if (params.runWithCrest) {
         """
         PSCBSgabs_plus_CRESTpoints.py \\
             --crest_deldupinv $crest_deldupinv    \\

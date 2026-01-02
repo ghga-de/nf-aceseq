@@ -7,7 +7,7 @@ process CLUSTER_SEGMENTS {
         'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
     
     input:
-    tuple val(meta), path(snp_update1), path(snp_update1_index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups), file(haplogroups_chr23)
+    tuple val(meta), path(snp_update1), path(snp_update1_index), path(segments_w_homodel), path(sexfile), path(gc_corrected), path(haplogroups)
     each file(chrlenght)
     val(chr_prefix)
 

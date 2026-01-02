@@ -17,6 +17,7 @@
                 "type": "string",
                 "pattern": "^\\S+$",
                 "errorMessage": "Tumor Sample Name: tumor or metastasis",
+                "default": "tumor",
                 "enum": ["tumor", "metastasis"],
                 "meta": ["tumorname"]
             },
@@ -24,6 +25,7 @@
                 "type": "string",
                 "pattern": "^\\S+$",
                 "errorMessage": "Control Sample Name: control, normal or blood",
+                "default": "control",
                 "enum": ["control", "normal", "blood"],
                 "meta": ["controlname"]
             },
@@ -64,7 +66,7 @@
             "sv": {
                 "errorMessage": "SV results from Sophia",
                 "type": "string",
-                "pattern": "^\\S+\\.(txt|vcf)$",
+                "pattern": "^\\S+\\.(txt|vcf|tsv)$",
                 "format": "file-path",
                 "exists": true
             }

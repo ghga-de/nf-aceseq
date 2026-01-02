@@ -2,15 +2,13 @@
 // SNV_CALLING: RUN SAMTOOLS MPILEUP by intervals
 //
 
-params.options = [:]
-
-include { SAMTOOLS_MPILEUP } from '../../modules/nf-core/samtools/mpileup/main.nf' addParams( options: params.options )
-include { WIN_GENERATOR    } from '../../modules/local/win_generator.nf'           addParams( options: params.options )
-include { MERGE_SNP        } from '../../modules/local/merge_snp.nf'               addParams( options: params.options )
-include { ESTIMATE_SEX     } from '../../modules/local/estimate_sex.nf'            addParams( options: params.options )
-include { ANNOTATE_CNV     } from '../../modules/local/annotate_cnv.nf'            addParams( options: params.options )
-include { MERGE_CNV        } from '../../modules/local/merge_cnv.nf'               addParams( options: params.options )
-include { FAKE_CONTROL     } from '../../modules/local/fake_control.nf'            addParams( options: params.options )
+include { SAMTOOLS_MPILEUP } from '../../modules/nf-core/samtools/mpileup/main.nf'
+include { WIN_GENERATOR    } from '../../modules/local/win_generator.nf'
+include { MERGE_SNP        } from '../../modules/local/merge_snp.nf'
+include { ESTIMATE_SEX     } from '../../modules/local/estimate_sex.nf'
+include { ANNOTATE_CNV     } from '../../modules/local/annotate_cnv.nf'
+include { MERGE_CNV        } from '../../modules/local/merge_cnv.nf'
+include { FAKE_CONTROL     } from '../../modules/local/fake_control.nf'
 
 
 workflow SNV_CALLING {

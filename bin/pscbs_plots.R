@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
 
 # Copyright (c) 2017 The ACEseq workflow developers.
 # This script is licenced under (license terms are at

@@ -3,7 +3,7 @@
 //
 
 params.options = [:]
-include { ESTIMATE_HDRSCORE       } from '../../modules/local/estimate_hdrscore.nf'              addParams( options: params.options )
+include { ESTIMATE_HDRSCORE       } from '../../modules/local/estimate_hdrscore.nf'
 
 workflow HDR_ESTIMATION {
     take:
@@ -19,6 +19,10 @@ workflow HDR_ESTIMATION {
     main:
     versions = Channel.empty()
 
+    sexfile = sexfile.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    } 
     //
     // MODULE:ESTIMATE_HDRSCORE
     //

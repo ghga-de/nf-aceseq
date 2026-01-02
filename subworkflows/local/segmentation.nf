@@ -1,17 +1,14 @@
 //
 // SEGMENTATION:
 //
-
-params.options = [:]
-
-include { DEFINE_BREAKPOINTS     } from '../../modules/local/define_breakpoints.nf'     addParams( options: params.options )
-include { ADD_SVS                } from '../../modules/local/add_svs.nf'                addParams( options: params.options )
-include { ADD_CREST              } from '../../modules/local/add_crest.nf'              addParams( options: params.options )
-include { PSCBS_SEGMENTATION     } from '../../modules/local/pscbs_segmentation.nf'     addParams( options: params.options )
-include { HOMOZYGOUS_DELETIONS   } from '../../modules/local/homozygous_deletions.nf'   addParams( options: params.options )
-include { CLUSTER_SEGMENTS       } from '../../modules/local/cluster_segments.nf'       addParams( options: params.options )
-include { SEGMENTS_TO_DATA as SEGMENTS_TO_HOMODEL } from '../../modules/local/segments_to_data.nf'     addParams( options: params.options )
-include { SEGMENTS_TO_DATA as SEGMENTS_TO_SNP     } from '../../modules/local/segments_to_data.nf'     addParams( options: params.options )
+include { DEFINE_BREAKPOINTS     } from '../../modules/local/define_breakpoints.nf'
+include { ADD_SVS                } from '../../modules/local/add_svs.nf'
+include { ADD_CREST              } from '../../modules/local/add_crest.nf'
+include { PSCBS_SEGMENTATION     } from '../../modules/local/pscbs_segmentation.nf'
+include { HOMOZYGOUS_DELETIONS   } from '../../modules/local/homozygous_deletions.nf'
+include { CLUSTER_SEGMENTS       } from '../../modules/local/cluster_segments.nf'
+include { SEGMENTS_TO_DATA as SEGMENTS_TO_HOMODEL } from '../../modules/local/segments_to_data.nf'
+include { SEGMENTS_TO_DATA as SEGMENTS_TO_SNP     } from '../../modules/local/segments_to_data.nf'
 
 
 workflow SEGMENTATION {
@@ -30,8 +27,29 @@ workflow SEGMENTATION {
     main:
     versions = Channel.empty()
 
+    // clean meta.sex as it may mismatch after fix!
+    gc_corr_win = gc_corr_win.map { meta, files ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, files ]
+    }
+    snp_pos_haplo_wg = snp_pos_haplo_wg.map { meta, file, index ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file, index ]
+    }
+    sex_file = sex_file.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    }
+    ch_sv = ch_sv.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    }   
+    gc_corr_qual = gc_corr_qual.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    }  
+
     //// datatablePSCBSgaps.sh ////
-    
     //
     // MODULE:DEFINE_BREAKPOINTS 
     //
@@ -39,7 +57,7 @@ workflow SEGMENTATION {
     gc_corr_win.join(snp_pos_haplo_wg)
                 .join(sex_file)
                 .set{input_ch}
-    
+
     DEFINE_BREAKPOINTS(
         input_ch,
         centromers
@@ -67,6 +85,7 @@ workflow SEGMENTATION {
     // MODULE:ADD_CREST
     //
     // Run PSCBSgabs_plus_CRESTpoints.py
+    // I couldnt find an example on how to run this, so it doesnt work really.
     ch_sv_points = ADD_SVS.out.sv_points
     ch_sv.join(ch_sv_points)
         .join(ADD_SVS.out.breakpoints)

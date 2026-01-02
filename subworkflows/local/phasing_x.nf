@@ -5,15 +5,15 @@
 
 params.options = [:]
 
-include { BCFTOOLS_MPILEUP    } from '../../modules/nf-core/bcftools/mpileup/main.nf' addParams( options: params.options )
-include { CREATE_FAKE_SAMPLES } from '../../modules/local/create_fake_samples.nf'     addParams( options: params.options )
-include { EMBED_HAPLOTYPES    } from '../../modules/local/embed_haplotypes.nf'        addParams( options: params.options )
-include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'        addParams( options: params.options )
-include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'          addParams( options: params.options )
-include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'        addParams( options: params.options )
-include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'           addParams( options: params.options )
-include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'           addParams( options: params.options )
-include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options )
+include { BCFTOOLS_MPILEUP    } from '../../modules/nf-core/bcftools/mpileup/main.nf'
+include { CREATE_FAKE_SAMPLES } from '../../modules/local/create_fake_samples.nf'
+include { EMBED_HAPLOTYPES    } from '../../modules/local/embed_haplotypes.nf'
+include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'
+include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'
+include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'
+include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'
+include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'
+include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'
 
 
 workflow PHASING_X {
@@ -195,7 +195,7 @@ workflow PHASING_X {
         versions          = versions.mix(CREATE_BAF_PLOTS.out.versions)
     }
 
-    ch_haploblocks = ch_haploblocks.map {it -> tuple( it[0], it[1], [])}
+    ch_haploblocks = ch_haploblocks.map {it -> tuple( it[0], it[1])}
 
     emit:
     versions

@@ -2,10 +2,8 @@
 // PREPROCESSING: RUN 
 //
 
-params.options = [:]
-
-include { GC_BIAS         } from '../../modules/local/gc_bias.nf'           addParams( options: params.options )
-include { CONVERT_TO_JSON } from '../../modules/local/convert_to_json.nf'   addParams( options: params.options )
+include { GC_BIAS         } from '../../modules/local/gc_bias.nf'
+include { CONVERT_TO_JSON } from '../../modules/local/convert_to_json.nf'
 
 
 workflow PREPROCESSING {

@@ -4,7 +4,7 @@ process GENERATE_PLOTS {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
+        'docker://kubran/aceseq_r:v1':'kubran/aceseq_r:v1' }"
     
     input:
     tuple val(meta), path(all_snp_update3), path(index), path(svpoints), path(segments_w_peaks), path(purity_ploidy), path(sex_file), path(all_corrected)

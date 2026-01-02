@@ -24,7 +24,7 @@ if (params.fake_control){
 
 
 // Set up reference depending on the genome choice
-ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
+ref            = Channel.fromPath([params.fasta,params.fai], checkIfExists: true).collect()
 
 chrprefix      = params.chr_prefix              ? Channel.value(params.chr_prefix) : Channel.value("")
 
@@ -65,41 +65,22 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT LOCAL MODULES/SUBWORKFLOWS
+    IMPORT MODULES/SUBWORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//
-// SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
-//
-include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
-include { SNV_CALLING               } from '../subworkflows/local/snv_calling'
-include { PREPROCESSING             } from '../subworkflows/local/preprocessing'
-include { SEGMENTATION              } from '../subworkflows/local/segmentation'
-include { PURITY_EVALUATION         } from '../subworkflows/local/purity_evaluation'
-include { HDR_ESTIMATION            } from '../subworkflows/local/hdr_estimation'
-include { PHASING_X                 } from '../subworkflows/local/phasing_x'
-include { PHASING_Y                 } from '../subworkflows/local/phasing_y'
-
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT NF-CORE MODULES/SUBWORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-//
-// MODULE: Installed directly from nf-core/modules
-//
+include { paramsSummaryMap            } from 'plugin/nf-schema'
+include { samplesheetToList           } from 'plugin/nf-schema'
+include { SNV_CALLING                 } from '../subworkflows/local/snv_calling'
+include { PREPROCESSING               } from '../subworkflows/local/preprocessing'
+include { SEGMENTATION                } from '../subworkflows/local/segmentation'
+include { PURITY_EVALUATION           } from '../subworkflows/local/purity_evaluation'
+include { HDR_ESTIMATION              } from '../subworkflows/local/hdr_estimation'
+include { PHASING_X                   } from '../subworkflows/local/phasing_x'
+include { PHASING_Y                   } from '../subworkflows/local/phasing_y'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-
-//
-// MODULE: Local Modules
-//
-
-include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
+include { GETCHROMSIZES               } from '../modules/local/getchromsizes.nf'
 include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_1  } from '../modules/local/prepare_beagle_ref.nf'
 include { PREPARE_BEAGLE_REF as PREPARE_BEAGLE_REF_2  } from '../modules/local/prepare_beagle_ref.nf'
 
@@ -210,7 +191,6 @@ workflow ACESEQ {
             )
 
         // Run phasing for female samples
-     
         PHASING_X(
             sex.female,
             ref, 
@@ -235,19 +215,22 @@ workflow ACESEQ {
             chrprefix
         )
         ch_versions     = ch_versions.mix(PHASING_Y.out.versions)
-        snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_Y.out.ch_snp_haplotypes)
+
+        snp_haplotypes_ch = snp_haplotypes_ch.mix(PHASING_Y.out.ch_snp_haplotypes) 
+        snp_haplotypes_ch = snp_haplotypes_ch.map { meta, file, index ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file, index ]
+        }
+
         haploblocks_ch    = haploblocks_ch.mix(PHASING_Y.out.ch_haploblocks)
-        
+        haploblocks_ch = haploblocks_ch.map { meta, files ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, files ]
+        }
+
         //
         // SUBWORKFLOW: SEGMENTATION: 
         //
-        PREPROCESSING.out.windows_corrected
-                        .join(PREPROCESSING.out.qual_corrected)
-                        .join(snp_haplotypes_ch)
-                        .join(haploblocks_ch)
-                        .join(SNV_CALLING.out.ch_sex)
-                        .set{segments_ch}  
-        
         SEGMENTATION(
             ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, sv]}, 
             PREPROCESSING.out.windows_corrected,

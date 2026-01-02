@@ -2,12 +2,10 @@
 // PURITY_EVALUATION: RUN plots.sh
 //
 
-params.options = [:]
-
-include { ESTIMATE_PEAKS         } from '../../modules/local/estimate_peaks.nf'         addParams( options: params.options )
-include { ESTIMATE_PURITY_PLOIDY } from '../../modules/local/estimate_purity_ploidy.nf' addParams( options: params.options )
-include { GENERATE_PLOTS         } from '../../modules/local/generate_plots.nf'     addParams( options: params.options )
-include { PURITY_PLOIDY          } from '../../modules/local/purity_ploidy.nf'         addParams( options: params.options )
+include { ESTIMATE_PEAKS         } from '../../modules/local/estimate_peaks.nf'
+include { ESTIMATE_PURITY_PLOIDY } from '../../modules/local/estimate_purity_ploidy.nf'
+include { GENERATE_PLOTS         } from '../../modules/local/generate_plots.nf'
+include { PURITY_PLOIDY          } from '../../modules/local/purity_ploidy.nf'
 
 
 workflow PURITY_EVALUATION {
@@ -22,6 +20,15 @@ workflow PURITY_EVALUATION {
     main:
     versions = Channel.empty()
 
+    sex_file = sex_file.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    } 
+
+    all_corrected = all_corrected.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    }   
     //// purityPloidity.sh ////
     //
     // MODULE: ESTIMATE_PEAKS

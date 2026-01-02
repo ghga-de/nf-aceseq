@@ -5,16 +5,16 @@
 
 params.options = [:]
 
-include { BCFTOOLS_MPILEUP    } from '../../modules/nf-core/bcftools/mpileup/main.nf' addParams( options: params.options )
-include { MAKE_MOCK           } from '../../modules/local/make_mock.nf'               addParams( options: params.options )
-include { CREATE_FAKE_SAMPLES } from '../../modules/local/create_fake_samples.nf'     addParams( options: params.options )
-include { EMBED_HAPLOTYPES    } from '../../modules/local/embed_haplotypes.nf'        addParams( options: params.options )
-include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'        addParams( options: params.options )
-include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'          addParams( options: params.options )
-include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'        addParams( options: params.options )
-include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'           addParams( options: params.options )
-include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'           addParams( options: params.options )
-include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'         addParams( options: params.options )
+include { BCFTOOLS_MPILEUP    } from '../../modules/nf-core/bcftools/mpileup/main.nf'
+include { MAKE_MOCK           } from '../../modules/local/make_mock.nf'
+include { CREATE_FAKE_SAMPLES } from '../../modules/local/create_fake_samples.nf'
+include { EMBED_HAPLOTYPES    } from '../../modules/local/embed_haplotypes.nf'
+include { GROUP_HAPLOTYPES    } from '../../modules/local/group_haplotypes.nf'
+include { ADD_HAPLOTYPES      } from '../../modules/local/add_haplotypes.nf'
+include { CREATE_BAF_PLOTS    } from '../../modules/local/create_baf_plots.nf'
+include { BEAGLE5_BEAGLE      } from '../../modules/nf-core/beagle/main.nf'
+include { GET_GENOTYPES       } from '../../modules/local/get_genotypes.nf'
+include { CREATE_UNPHASED     } from '../../modules/local/create_unphased.nf'
 
 
 workflow PHASING_Y {
@@ -162,7 +162,11 @@ workflow PHASING_Y {
 
     GROUP_HAPLOTYPES.out.haplogroups
                         .groupTuple()
-                        .join(haploblock_x)                    
+                        .join(haploblock_x)
+                        // MERGE STEP: Combine autosome list with X file into one list
+                        .map { meta, autosomes, x_file -> 
+                            return [ meta, autosomes + x_file ]
+                        }
                         .set{ch_haploblocks}
                    
     // if sample is male phased_vcf_x will be used as mock otherwise it is already in phased_vcf
