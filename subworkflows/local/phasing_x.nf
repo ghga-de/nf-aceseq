@@ -60,6 +60,7 @@ workflow PHASING_X {
         .set{all_snp_ch}
 
     ch_all_snp = ch_all_snp.mix(all_snp_ch.control)
+    
     //// estimateGenotypes.sh  //////
 
     //
@@ -72,6 +73,7 @@ workflow PHASING_X {
     versions = versions.mix(GET_GENOTYPES.out.versions)
     fake_snp_ch = GET_GENOTYPES.out.fake_snp
     ch_all_snp  = ch_all_snp.mix(fake_snp_ch)
+
     //// createUnphasedFiles.sh /////
 
     CREATE_UNPHASED(

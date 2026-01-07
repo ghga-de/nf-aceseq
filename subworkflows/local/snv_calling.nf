@@ -144,7 +144,7 @@ workflow SNV_CALLING {
     versions  = versions.mix(MERGE_CNV.out.versions)
     all_cnv   = MERGE_CNV.out.cnv
 
-        //// snvMergeFilter.sh ////
+    //// snvMergeFilter.sh ////
 
     //
     // MERGE_SNP: Merge and filter SNP positions

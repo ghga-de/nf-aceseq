@@ -118,6 +118,7 @@ workflow ACESEQ {
         chrlength   = GETCHROMSIZES.out.sizes
     }
 
+    // part of cnvSnpGeneration.sh
     SNV_CALLING(
         ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, tumor, tumor_index, control, control_index]}, 
         ref, 
