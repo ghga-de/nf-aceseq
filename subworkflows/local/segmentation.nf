@@ -57,7 +57,7 @@ workflow SEGMENTATION {
     gc_corr_win.join(snp_pos_haplo_wg)
                 .join(sex_file)
                 .set{input_ch}
-
+    
     DEFINE_BREAKPOINTS(
         input_ch,
         centromers
