@@ -246,7 +246,7 @@ workflow ACESEQ {
         )
         ch_versions     = ch_versions.mix(PURITY_EVALUATION.out.versions)
 
-        ESTIMATE_HRDSCORE(
+        HRD_ESTIMATION(
             PURITY_EVALUATION.out.json_report,
             PURITY_EVALUATION.out.hrd_files,
             blacklist,
