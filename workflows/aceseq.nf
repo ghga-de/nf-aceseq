@@ -248,7 +248,7 @@ workflow ACESEQ {
 
         ESTIMATE_HRDSCORE(
             PURITY_EVALUATION.out.json_report,
-            PURITY_EVALUATION.out.hdr_files,
+            PURITY_EVALUATION.out.hrd_files,
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
