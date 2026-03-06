@@ -75,7 +75,7 @@ include { SNV_CALLING                 } from '../subworkflows/local/snv_calling'
 include { PREPROCESSING               } from '../subworkflows/local/preprocessing'
 include { SEGMENTATION                } from '../subworkflows/local/segmentation'
 include { PURITY_EVALUATION           } from '../subworkflows/local/purity_evaluation'
-include { HDR_ESTIMATION              } from '../subworkflows/local/hdr_estimation'
+include { ESTIMATE_HRDSCORE           } from '../subworkflows/local/estimate_hrdscore'
 include { PHASING_X                   } from '../subworkflows/local/phasing_x'
 include { PHASING_Y                   } from '../subworkflows/local/phasing_y'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
@@ -130,10 +130,6 @@ workflow ACESEQ {
     )
     ch_versions    = ch_versions.mix(SNV_CALLING.out.versions)
     
-    //
-    // SUBWORKFLOW: PREPROCESSING
-    //  
-
     PREPROCESSING(
         SNV_CALLING.out.all_cnv,
         rep_time,
@@ -146,10 +142,7 @@ workflow ACESEQ {
 
         snp_haplotypes_ch = Channel.empty()
         haploblocks_ch    = Channel.empty()
-        
-        //
-        // SUBWORKFLOW: PHASING: Call mpileup and beagle
-        //
+
             
         // brach samples for sexes
         // discuss about klinefelter case (XXY)
@@ -229,9 +222,6 @@ workflow ACESEQ {
             return [ clean_meta, files ]
         }
 
-        //
-        // SUBWORKFLOW: SEGMENTATION: 
-        //
         SEGMENTATION(
             ch_sample.map{meta, tumor, tumor_index, control, control_index, sv -> [meta, sv]}, 
             PREPROCESSING.out.windows_corrected,
@@ -246,9 +236,6 @@ workflow ACESEQ {
         )
         ch_versions     = ch_versions.mix(SEGMENTATION.out.versions)
 
-        //
-        // SUBWORKFLOW: PURITY_EVALUATION: 
-        //
         PURITY_EVALUATION(
             SEGMENTATION.out.ch_clustered_segments,
             SEGMENTATION.out.ch_sv_points,
@@ -259,10 +246,7 @@ workflow ACESEQ {
         )
         ch_versions     = ch_versions.mix(PURITY_EVALUATION.out.versions)
 
-        //
-        // SUBWORKFLOW: HDR_ESTIMATION: 
-        //
-        HDR_ESTIMATION(
+        ESTIMATE_HRDSCORE(
             PURITY_EVALUATION.out.json_report,
             PURITY_EVALUATION.out.hdr_files,
             blacklist,

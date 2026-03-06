@@ -34,9 +34,6 @@ workflow SNV_CALLING {
 
     ///// cnv_snvMpileup.sh ////
 
-    //
-    // MODULE:SAMTOOLS_MPILEUP 
-    //
     // RUN samtools mpileup to call variants. This process is scattered by chr intervals
     // If there is no control bam file samtools runs only for tumor automatically. 
     input = combined_inputs.map {it -> tuple( it[0],it[1],it[2],it[3],it[4],it[5])}
@@ -46,9 +43,6 @@ workflow SNV_CALLING {
     )
     versions = versions.mix(SAMTOOLS_MPILEUP.out.versions)
 
-    //
-    // MODULE:WIN_GENERATOR
-    //
     // RUN snp_cnv.py
     WIN_GENERATOR(
         SAMTOOLS_MPILEUP.out.mpileup, 
@@ -58,9 +52,6 @@ workflow SNV_CALLING {
 
     ///// vcfAnno.sh ////
 
-    //
-    // MODULE: ESTIMATE_SEX
-    //
     // Run getSex.R per cnv file
     // combine cnvs according to meta id
     // If there is no control or params.estimatesex if turned off, user defined sex data will be used. 
@@ -78,9 +69,6 @@ workflow SNV_CALLING {
     versions  = versions.mix(ESTIMATE_SEX.out.versions)
     ch_sex    = ESTIMATE_SEX.out.sex
 
-    //
-    // MODULE: ANNOTATE_CNV
-    //
     // Run annotate_vcf.pl and addMappability.py per cnv file
     // Group interval SNP tab files according to meta
     ANNOTATE_CNV(
@@ -99,9 +87,7 @@ workflow SNV_CALLING {
     // Runs for fake control replacement (for bad control or no control samples) with defined params.fake_control !
 
     //// replaceControl.sh ///// 
-    //
-    // MODULE: FAKE_CONTROL
-    //
+
     if (params.fake_control) {
 
         println "Running with fake control is in process -- fake control replacement"
@@ -133,9 +119,6 @@ workflow SNV_CALLING {
 
     //// cnvMergeFilter.sh ////
 
-    //
-    // MODULE: MERGE_CNV
-    //
     // Runs merge_and_filter_cnv.py
     MERGE_CNV (
         ch_anno_cnv, // tuple val(meta)  , path(cnvs)
@@ -146,9 +129,6 @@ workflow SNV_CALLING {
 
     //// snvMergeFilter.sh ////
 
-    //
-    // MERGE_SNP: Merge and filter SNP positions
-    //
     // Runs merge_and_filter_snp.py
 
     // Group interval SNP tab files according to meta id

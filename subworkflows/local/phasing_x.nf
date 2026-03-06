@@ -62,10 +62,6 @@ workflow PHASING_X {
     ch_all_snp = ch_all_snp.mix(all_snp_ch.control)
     
     //// estimateGenotypes.sh  //////
-
-    //
-    // MODULE: GET_GENOTYPES
-    //
         
     GET_GENOTYPES(
         all_snp_ch.nocontrol
@@ -73,8 +69,8 @@ workflow PHASING_X {
     versions = versions.mix(GET_GENOTYPES.out.versions)
     fake_snp_ch = GET_GENOTYPES.out.fake_snp
     ch_all_snp  = ch_all_snp.mix(fake_snp_ch)
-    //// createUnphasedFiles.sh /////
 
+    //// createUnphasedFiles.sh /////
     CREATE_UNPHASED(
         fake_snp_ch,
         dbsnp,
@@ -91,9 +87,6 @@ workflow PHASING_X {
         
     ch_unphased = ch_unphased.mix(unphased)
 
-    //
-    // MODULE:BCFTOOLS_MPILEUP 
-    //
     // RUN bcftools mpileup to call variants. This process is scattered by chr intervals (only for chr1-22)
     // in OTP running pipeline samtools mpileup is used!
     BCFTOOLS_MPILEUP (
@@ -103,18 +96,12 @@ workflow PHASING_X {
     versions    = versions.mix(BCFTOOLS_MPILEUP.out.versions)
     ch_unphased = ch_unphased.mix(BCFTOOLS_MPILEUP.out.vcf)
     
-    //
-    // MODULE:CREATE_FAKE_SAMPLES 
-    //
     // RUN beagle_create_fake_samples.py, Run for Chr 1-22 and ChrX if female
     CREATE_FAKE_SAMPLES(
         ch_unphased
     )
     versions = versions.mix(CREATE_FAKE_SAMPLES.out.versions)
     
-    //
-    // MODULE:BEAGLE 
-    // 
     // Run beagle for Chr 1-22 and chrX if female
     // OTP runs have impute working! Beagle is new. 
     BEAGLE5_BEAGLE(
@@ -130,10 +117,6 @@ workflow PHASING_X {
                     .join(ch_unphased, by: [0, 1])
                     .set{ch_embed}
     
-
-    //
-    // MODULE:EMBED_HAPLOTYPES 
-    // 
     // beagle_embed_haplotypes_vcf.py, Run for Chr 1-22 and chrX if female
     EMBED_HAPLOTYPES(
         ch_embed,
@@ -141,9 +124,6 @@ workflow PHASING_X {
     )
     versions = versions.mix(EMBED_HAPLOTYPES.out.versions)
 
-    //
-    // MODULE:GROUP_HAPLOTYPES 
-    // 
     // group_haplotypes.pg ,Run for Chr 1-22 chrX if female
     GROUP_HAPLOTYPES(
         EMBED_HAPLOTYPES.out.phased_vcf,
@@ -166,9 +146,6 @@ workflow PHASING_X {
     
     //// haplotypes.sh ////
 
-    //
-    // MODULE: ADD_HAPLOTYPES
-    //
     // add_haplotypes.py, merge chromosomes and add haplogroups
     ADD_HAPLOTYPES(
         phasedvcf_ch
@@ -178,11 +155,6 @@ workflow PHASING_X {
     
     if (params.createbafplots){
         ///// createcontrolbafplots.sh /////
-
-        // 
-        // MODULE: CREATE_BAF_PLOTS
-        //
-
         ch_snp_haplotypes.branch{
             control: it[0].iscontrol == 1
             nocontrol: it[0].iscontrol == 0}

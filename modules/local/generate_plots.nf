@@ -13,7 +13,7 @@ process GENERATE_PLOTS {
 
     output:
     path('*.png')   
-    tuple val(meta), path('*.txt')                   , emit: hdr_estimate_files 
+    tuple val(meta), path('*.txt')                   , emit: hrd_estimate_files 
     tuple val(meta), path("*_cnv_parameter_*.txt")   , emit: cnv_params
     path  "versions.yml"                             , emit: versions
 

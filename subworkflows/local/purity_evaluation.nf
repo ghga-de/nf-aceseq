@@ -30,10 +30,6 @@ workflow PURITY_EVALUATION {
             return [ clean_meta, file ]
     }   
     //// purityPloidity.sh ////
-    //
-    // MODULE: ESTIMATE_PEAKS
-    //
-    //
     //Run purity_ploidy.R
     all_snp_update3
                 .join(clustered_segments)
@@ -47,9 +43,6 @@ workflow PURITY_EVALUATION {
     ch_segment_w_peaks = ESTIMATE_PEAKS.out.segment_w_peaks
 
     //purityPloidity_EstimateFinal.sh
-    //
-    // MODULE: ESTIMATE_PURITY_PLOIDY
-    //
     //Run purity_ploidy_estimation_final.R
 
     ESTIMATE_PURITY_PLOIDY(
@@ -66,22 +59,15 @@ workflow PURITY_EVALUATION {
                     .join(sex_file)
                     .join(all_corrected)
                     .set{ch_input}
-
-    //
-    // MODULE: GENERATE_PlOTS
-    //
     // Run pscbs_plots.R 
     
     GENERATE_PLOTS(
         ch_input,
         chrlength
     )
-    hdr_files = GENERATE_PLOTS.out.hdr_estimate_files
+    hrd_files = GENERATE_PLOTS.out.hrd_estimate_files
     versions  = versions.mix(GENERATE_PLOTS.out.versions)
 
-    //
-    // MODULE: PURITY_PLOIDY
-    //
     // Run getFinalPurityPloidy.py
     PURITY_PLOIDY(
         ch_purity_ploidy.join(GENERATE_PLOTS.out.cnv_params)
@@ -90,6 +76,6 @@ workflow PURITY_EVALUATION {
 
     emit:
     json_report
-    hdr_files
+    hrd_files
     versions
 }
