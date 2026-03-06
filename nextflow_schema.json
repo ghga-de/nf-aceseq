@@ -27,7 +27,7 @@
           "description": "Path to directory containing fake control data, or false to disable.",
           "fa_icon": "fas fa-folder-open"
         },
-        "allowMissingSVFile": {
+        "allowMissingSV": {
           "type": "boolean",
           "description": "If true SV file will not be used in analysis",
           "fa_icon": "fas fa-folder-open"
