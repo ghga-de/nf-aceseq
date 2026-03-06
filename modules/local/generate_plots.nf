@@ -4,7 +4,7 @@ process GENERATE_PLOTS {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
+        'docker://kubran/aceseq_r:v1':'kubran/aceseq_r:v1' }"
     
     input:
     tuple val(meta), path(all_snp_update3), path(index), path(svpoints), path(segments_w_peaks), path(purity_ploidy), path(sex_file), path(all_corrected)
@@ -13,7 +13,7 @@ process GENERATE_PLOTS {
 
     output:
     path('*.png')   
-    tuple val(meta), path('*.txt')                   , emit: hdr_estimate_files 
+    tuple val(meta), path('*.txt')                   , emit: hrd_estimate_files 
     tuple val(meta), path("*_cnv_parameter_*.txt")   , emit: cnv_params
     path  "versions.yml"                             , emit: versions
 

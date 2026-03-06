@@ -1,11 +1,10 @@
-//This only works with v0
 process DEFINE_BREAKPOINTS {
     tag "$meta.id"
     label 'process_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_aceseqcalling:v0':'kubran/odcf_aceseqcalling:v0' }"
+        'docker://kubran/odcf_aceseqcalling:v6':'kubran/odcf_aceseqcalling:v6' }"
     
     input:
     tuple val(meta), path(gc_corrected_win), path(snp_haplo_pos), path(index), path(sexfile)

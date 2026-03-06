@@ -1,7 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/nf-core/aceseq/master/assets/schema_input.json",
-  "title": "nf-core/aceseq pipeline - params.input schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
+  "title": "ghga-de/nf-snvcalling pipeline - params.input schema",
   "description": "Schema for the file provided with params.input",
   "type": "array",
   "items": {
@@ -10,27 +10,68 @@
       "sample": {
         "type": "string",
         "pattern": "^\\S+$",
-        "errorMessage": "Sample name must be provided and cannot contain spaces"
+        "errorMessage": "Sample name must be provided and cannot contain spaces",
+        "meta": ["id"]
       },
-      "fastq_1": {
+      "tumorsample": {
         "type": "string",
-        "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-        "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+        "pattern": "^\\S+$",
+        "errorMessage": "Tumor Sample Name: tumor or metastasis",
+        "default": "tumor",
+        "enum": ["tumor", "metastasis"],
+        "meta": ["tumorname"]
       },
-      "fastq_2": {
-        "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
-        "anyOf": [
-          {
-            "type": "string",
-            "pattern": "^\\S+\\.f(ast)?q\\.gz$"
-          },
-          {
-            "type": "string",
-            "maxLength": 0
-          }
-        ]
+      "controlsample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Control Sample Name: control, normal or blood",
+        "default": "control",
+        "enum": ["control", "normal", "blood"],
+        "meta": ["controlname"]
+      },
+      "sex": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Sex of the sample: male, female, klinefelter",
+        "meta": ["sex"]
+      },
+      "tumor": {
+        "errorMessage": "Tumor alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "tumor_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control": {
+        "errorMessage": "Control alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "sv": {
+        "errorMessage": "SV results from Sophia",
+        "type": "string",
+        "pattern": "^\\S+\\.(txt|vcf|tsv)$",
+        "format": "file-path",
+        "exists": true
       }
     },
-    "required": ["sample", "fastq_1"]
+    "required": ["sample", "tumor", "tumor_index"],
+    "uniqueEntries": ["sample"]
   }
 }

@@ -4,6 +4,12 @@
 # This script is licenced under (license terms are at
 # https://www.github.com/eilslabs/ACEseqWorkflow/LICENSE.txt).
 
+##### Edit by Kubra Narci, 2025 December
+# Redirect R.cache to a temporary directory to avoid home directory errors in containers
+Sys.setenv(HOME = tempdir())
+Sys.setenv(R_CACHE_ROOT_PATH = file.path(tempdir(), ".Rcache"))
+######
+
 library(getopt)
 library(PSCBS)
 library(GenomicRanges)

@@ -1,5 +1,3 @@
-// This process only works if there is SV file as an input
-
 process ADD_SVS {
     tag "$meta.id"
     label 'process_low_cpu_high_memory'
@@ -9,7 +7,7 @@ process ADD_SVS {
         'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
-    tuple val(meta) , path(knownsegments)
+    tuple val(meta) , path(sv), path(knownsegments)
 
     output:
     tuple val(meta), path("*sv_points.txt")    , emit: sv_points
@@ -21,14 +19,14 @@ process ADD_SVS {
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-
-    if (!meta.missingsv) {
+    
+    if (sv) {
         """
         PSCBSgabs_plus_sv_points.py \\
-            --variants  $meta.sv \\
+            --variants  $sv \\
             --known_segments    $knownsegments \\
             --output    ${prefix}_sv_breakpoints.txt \\
-            --sv_out    ${prefix}_sv_sv_points.txt \\
+            --sv_out    ${prefix}_sv_points.txt \\
             --DDI_length    $params.min_DDI_length \\
             --selectCol $params.selSVColumn
 
@@ -37,9 +35,8 @@ process ADD_SVS {
             python: \$(python2 --version 2>&1 | sed 's/Python //g')
         END_VERSIONS
         """
-    }
-    else{
-
+    } 
+    else if (params.allowMissingSV) {
         """
         cp $knownsegments ${prefix}_breakpoints.txt
         sed -i '1s/^chr/#chr/' ${prefix}_breakpoints.txt
@@ -50,7 +47,8 @@ process ADD_SVS {
             python: \$(python2 --version 2>&1 | sed 's/Python //g')
         END_VERSIONS
         """
-
     }
-
+    else {
+        error "ERROR: SV file is missing for sample '${meta.id}' and params.allowMissingSV is set to false."
+    }
 }

@@ -18,7 +18,7 @@ import java.nio.file.Files
 */
 
 params.fasta        = WorkflowMain.getGenomeAttribute(params, 'fasta')
-params.fasta_fai    = WorkflowMain.getGenomeAttribute(params, 'fasta_fai')
+params.fai          = WorkflowMain.getGenomeAttribute(params, 'fai')
 params.chr_prefix   = WorkflowMain.getGenomeAttribute(params, 'chr_prefix')
 params.chrom_sizes  = WorkflowMain.getGenomeAttribute(params, 'chrom_sizes')
 params.contig_file  = WorkflowMain.getGenomeAttribute(params, 'contig_file')

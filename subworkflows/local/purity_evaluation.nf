@@ -2,12 +2,10 @@
 // PURITY_EVALUATION: RUN plots.sh
 //
 
-params.options = [:]
-
-include { ESTIMATE_PEAKS         } from '../../modules/local/estimate_peaks.nf'         addParams( options: params.options )
-include { ESTIMATE_PURITY_PLOIDY } from '../../modules/local/estimate_purity_ploidy.nf' addParams( options: params.options )
-include { GENERATE_PLOTS         } from '../../modules/local/generate_plots.nf'     addParams( options: params.options )
-include { PURITY_PLOIDY          } from '../../modules/local/purity_ploidy.nf'         addParams( options: params.options )
+include { ESTIMATE_PEAKS         } from '../../modules/local/estimate_peaks.nf'
+include { ESTIMATE_PURITY_PLOIDY } from '../../modules/local/estimate_purity_ploidy.nf'
+include { GENERATE_PLOTS         } from '../../modules/local/generate_plots.nf'
+include { PURITY_PLOIDY          } from '../../modules/local/purity_ploidy.nf'
 
 
 workflow PURITY_EVALUATION {
@@ -22,11 +20,16 @@ workflow PURITY_EVALUATION {
     main:
     versions = Channel.empty()
 
-        //// purityPloidity.sh ////
-    //
-    // MODULE: ESTIMATE_PEAKS
-    //
-    //
+    sex_file = sex_file.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    } 
+
+    all_corrected = all_corrected.map { meta, file ->
+            def clean_meta = meta.findAll { key, value -> key != 'sex' }
+            return [ clean_meta, file ]
+    }   
+    //// purityPloidity.sh ////
     //Run purity_ploidy.R
     all_snp_update3
                 .join(clustered_segments)
@@ -40,9 +43,6 @@ workflow PURITY_EVALUATION {
     ch_segment_w_peaks = ESTIMATE_PEAKS.out.segment_w_peaks
 
     //purityPloidity_EstimateFinal.sh
-    //
-    // MODULE: ESTIMATE_PURITY_PLOIDY
-    //
     //Run purity_ploidy_estimation_final.R
 
     ESTIMATE_PURITY_PLOIDY(
@@ -59,22 +59,15 @@ workflow PURITY_EVALUATION {
                     .join(sex_file)
                     .join(all_corrected)
                     .set{ch_input}
-
-    //
-    // MODULE: GENERATE_PlOTS
-    //
     // Run pscbs_plots.R 
     
     GENERATE_PLOTS(
         ch_input,
         chrlength
     )
-    hdr_files = GENERATE_PLOTS.out.hdr_estimate_files
+    hrd_files = GENERATE_PLOTS.out.hrd_estimate_files
     versions  = versions.mix(GENERATE_PLOTS.out.versions)
 
-    //
-    // MODULE: PURITY_PLOIDY
-    //
     // Run getFinalPurityPloidy.py
     PURITY_PLOIDY(
         ch_purity_ploidy.join(GENERATE_PLOTS.out.cnv_params)
@@ -83,6 +76,6 @@ workflow PURITY_EVALUATION {
 
     emit:
     json_report
-    hdr_files
+    hrd_files
     versions
 }

@@ -22,6 +22,21 @@
           "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/aceseq/usage#samplesheet-input).",
           "fa_icon": "fas fa-file-csv"
         },
+        "fake_control": {
+          "type": "string",
+          "description": "Path to directory containing fake control data, or false to disable.",
+          "fa_icon": "fas fa-folder-open"
+        },
+        "allowMissingSV": {
+          "type": "boolean",
+          "description": "If true SV file will not be used in analysis",
+          "fa_icon": "fas fa-folder-open"
+        },
+        "runWithCrest": {
+          "type": "boolean",
+          "description": "If true CREST SV breakpoints will be used in analysis",
+          "fa_icon": "fas fa-folder-open"
+        },
         "outdir": {
           "type": "string",
           "format": "directory-path",
@@ -98,7 +113,7 @@
           "type": "string",
           "format": "file-path",
           "mimetype": "text/plain",
-          "pattern": "^\\S+\\.bed(\\.gz)?$",
+          "pattern": "^\\S+\\.bed(Graph)?(\\.gz)?$",
           "fa_icon": "fas fa-annotation",
           "description": "UCSC wg Encode Mapability BED.GZ, should be indexed. Column Name: MAPABILITY"
         },
@@ -198,10 +213,10 @@
           "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
           "fa_icon": "far fa-file-code"
         },
-        "beagle_reference": {
+        "beagle_ref": {
           "type": "string",
           "format": "directory-path",
-          "description": "Directory / Beagle reference directory",
+          "description": "Directory containing Beagle reference files.",
           "fa_icon": "fas fa-cloud-download-alt"
         },
         "beagle_genetic_map": {
@@ -221,6 +236,35 @@
           "description": "Beagle map file extentions:map",
           "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
           "fa_icon": "far fa-file-code"
+        },
+        "plink_map": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Directory containing PLINK map files.",
+          "fa_icon": "fas fa-folder"
+        },
+        "plink_map_ext": {
+          "type": "string",
+          "description": "Extension for PLINK map files.",
+          "fa_icon": "far fa-file-code"
+        },
+        "data_path": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Base data path for references.",
+          "fa_icon": "fas fa-database",
+          "hidden": true
+        },
+        "refgenie_base": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Base path for Refgenie references.",
+          "fa_icon": "fas fa-database"
+        },
+        "refgenie_ignore": {
+          "type": "boolean",
+          "description": "Ignore Refgenie config.",
+          "fa_icon": "fas fa-ban"
         },
         "igenomes_base": {
           "type": "string",
@@ -472,6 +516,12 @@
           "default": "8.0",
           "fa_icon": "fas fa-annotation",
           "description": " "
+        },
+        "annotatePlotsWithGenes": {
+          "type": "string",
+          "default": "false",
+          "fa_icon": "fas fa-annotation",
+          "description": ""
         }
       }
     },
@@ -684,6 +734,12 @@
     },
     {
       "$ref": "#/definitions/generic_options"
+    },
+    {
+      "$ref": "#/definitions/main_swiches"
+    },
+    {
+      "$ref": "#/definitions/annotation_files"
     }
   ]
 }

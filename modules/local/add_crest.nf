@@ -8,7 +8,7 @@ process ADD_CREST {
         'docker://kubran/odcf_aceseqcalling:v5':'kubran/odcf_aceseqcalling:v5' }"
 
     input:
-    tuple val(meta) , path(svpoints), path(knownsegments), path(crest_deldupinv), path(crest_transloc)
+    tuple val(meta) , path(sv), path(svpoints), path(knownsegments), path(crest_deldupinv), path(crest_transloc)
 
     output:
     tuple val(meta), path("*sv_points2.txt")     , emit: sv_points
@@ -21,14 +21,14 @@ process ADD_CREST {
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    if (!meta.missingsv) {
+    if (params.runWithCrest) {
         """
         PSCBSgabs_plus_CRESTpoints.py \\
             --crest_deldupinv $crest_deldupinv    \\
             --crest_tx $crest_transloc  \\
             --known_segments    $knownsegments \\
             --output    ${prefix}_sv_breakpoints2.txt \\
-            --sv_out    ${prefix}_sv_sv_points2.txt \\
+            --sv_out    ${prefix}_sv_points2.txt \\
             --DDI_length    $params.min_DDI_length
 
         cat <<-END_VERSIONS > versions.yml
@@ -40,7 +40,6 @@ process ADD_CREST {
     else{
 
         """
-
         cp $knownsegments ${prefix}_breakpoints2.txt
         sed -i '1s/^chr/#chr/' ${prefix}_breakpoints2.txt
         echo "" > ${prefix}_sv_points2.txt

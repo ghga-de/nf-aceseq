@@ -20,9 +20,9 @@ process PSCBS_SEGMENTATION {
     script:
     def args      = task.ext.args ?: ''
     def prefix    = task.ext.prefix ?: "${meta.id}"
-    def nocontrol = meta.iscontrol == "1" ? "" : "--nocontrol TRUE"
+    def nocontrol = meta.iscontrol == 1 ? "" : "--nocontrol TRUE"
     def allowsv = "${meta.missingsv}" == "1" ?"--sv false":"--sv true"
-
+    // note that --crest option is not available in pscbs_all.R any more
     """
     pscbs_all.R \\
         --file_data $pscbs_data \\

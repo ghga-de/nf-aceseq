@@ -1,11 +1,9 @@
 //
-// PREPROCESSING: RUN 
+// PREPROCESSING: RUN PREPROCESSING
 //
 
-params.options = [:]
-
-include { GC_BIAS         } from '../../modules/local/gc_bias.nf'           addParams( options: params.options )
-include { CONVERT_TO_JSON } from '../../modules/local/convert_to_json.nf'   addParams( options: params.options )
+include { GC_BIAS         } from '../../modules/local/gc_bias.nf'
+include { CONVERT_TO_JSON } from '../../modules/local/convert_to_json.nf'
 
 
 workflow PREPROCESSING {
@@ -19,10 +17,6 @@ workflow PREPROCESSING {
     versions = Channel.empty()
     
     ///// correct_gc_bias.sh ////
-    cnv_pos.view()
-    //
-    // MODULE: GC_BIAS
-    //
     // Run correctGCBias.R 
     GC_BIAS(
         cnv_pos,
@@ -35,9 +29,6 @@ workflow PREPROCESSING {
     all_corrected     = GC_BIAS.out.all_corrected
     versions          = versions.mix(GC_BIAS.out.versions)
 
-    //
-    // MODULE: CONVERT_TO_JSON
-    //
     // Run convertTabToJson.py
 
     CONVERT_TO_JSON(
