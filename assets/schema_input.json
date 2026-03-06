@@ -1,77 +1,77 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
-    "title": "ghga-de/nf-snvcalling pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "sample": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "meta": ["id"]
-            },
-            "tumorsample": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Tumor Sample Name: tumor or metastasis",
-                "default": "tumor",
-                "enum": ["tumor", "metastasis"],
-                "meta": ["tumorname"]
-            },
-            "controlsample": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Control Sample Name: control, normal or blood",
-                "default": "control",
-                "enum": ["control", "normal", "blood"],
-                "meta": ["controlname"]
-            },
-            "sex": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sex of the sample: male, female, klinefelter",
-                "meta": ["sex"]
-            },
-            "tumor": {
-                "errorMessage": "Tumor alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bam|cram)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "tumor_index": {
-                "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bai|crai)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "control": {
-                "errorMessage": "Control alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bam|cram)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "control_index": {
-                "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bai|crai)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "sv": {
-                "errorMessage": "SV results from Sophia",
-                "type": "string",
-                "pattern": "^\\S+\\.(txt|vcf|tsv)$",
-                "format": "file-path",
-                "exists": true
-            }
-        },
-        "required": ["sample", "tumor", "tumor_index"],
-        "uniqueEntries": ["sample"]
-    }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
+  "title": "ghga-de/nf-snvcalling pipeline - params.input schema",
+  "description": "Schema for the file provided with params.input",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "sample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Sample name must be provided and cannot contain spaces",
+        "meta": ["id"]
+      },
+      "tumorsample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Tumor Sample Name: tumor or metastasis",
+        "default": "tumor",
+        "enum": ["tumor", "metastasis"],
+        "meta": ["tumorname"]
+      },
+      "controlsample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Control Sample Name: control, normal or blood",
+        "default": "control",
+        "enum": ["control", "normal", "blood"],
+        "meta": ["controlname"]
+      },
+      "sex": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Sex of the sample: male, female, klinefelter",
+        "meta": ["sex"]
+      },
+      "tumor": {
+        "errorMessage": "Tumor alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "tumor_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control": {
+        "errorMessage": "Control alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "sv": {
+        "errorMessage": "SV results from Sophia",
+        "type": "string",
+        "pattern": "^\\S+\\.(txt|vcf|tsv)$",
+        "format": "file-path",
+        "exists": true
+      }
+    },
+    "required": ["sample", "tumor", "tumor_index"],
+    "uniqueEntries": ["sample"]
+  }
 }
