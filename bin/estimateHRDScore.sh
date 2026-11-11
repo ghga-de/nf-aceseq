@@ -46,6 +46,17 @@ do
 	esac
 done
 
+# The segment files use chromosome names without "chr". Bring the blacklist into the same
+# format, otherwise bedtools intersect matches nothing (e.g. the hg38 blacklist uses chr2, chr6, ...)
+# and no artifact regions are removed (issue #26). X/Y regions are written both as X/Y and 23/24,
+# so they match whichever naming the segment file uses.
+blacklistNormalized=blacklist.normalized.txt
+awk 'BEGIN{FS=OFS="\t"} /^#/ {print; next} {
+    sub(/^chr/, "", $1); print
+    if ($1 == "X")  { $1 = "23"; print } else if ($1 == "23") { $1 = "X"; print }
+    else if ($1 == "Y")  { $1 = "24"; print } else if ($1 == "24") { $1 = "Y"; print }
+}' ${blacklistFileName} > ${blacklistNormalized}
+blacklistFileName=${blacklistNormalized}
 
 parseJson.py -f ${jsonfile} >${jsonfile}.txt
 cat ${jsonfile}.txt | while read line
