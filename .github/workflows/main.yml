@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev
-      - 15-cicd-tests
+      - main
   pull_request:
   release:
     types: [published]
@@ -26,6 +26,12 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
       - name: Install Nextflow
         env:

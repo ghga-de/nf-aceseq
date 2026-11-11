@@ -19,3 +19,4 @@ work/*
 .github/CODEOWNERS-tmp
 bin/vcfparser.pyc
 singularity/*
+node_modules/
