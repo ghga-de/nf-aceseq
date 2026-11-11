@@ -1,0 +1,141 @@
+nextflow_pipeline {
+
+    name "Input and parameter validation"
+    script "../main.nf"
+    tag "validation"
+
+    // Writes a samplesheet with absolute paths into the test's output directory
+    // and returns its path. Each row is a map of column -> value; missing columns stay empty.
+    def sheet = { String outDir, String name, List<Map> rows ->
+        def cols = ['sample', 'sex', 'tumorsample', 'tumor', 'tumor_index', 'control', 'control_index']
+        def f = new File("${outDir}/${name}.csv")
+        f.parentFile.mkdirs()
+        f.text = cols.join(',') + '\n' + rows.collect { r -> cols.collect { r[it] ?: '' }.join(',') }.join('\n') + '\n'
+        return f.absolutePath
+    }
+    // Rows using the test BAMs in testdata/. Call as paired([:], baseDir) or paired(baseDir, sex: 'male');
+    // Groovy passes the named arguments as the first (Map) parameter.
+    def tumor = { Map extra, String base ->
+        [sample: 'test', sex: 'female',
+         tumor: "${base}/testdata/SEQC2_LL1_T_small.bam".toString(),
+         tumor_index: "${base}/testdata/SEQC2_LL1_T_small.bam.bai".toString()] + extra
+    }
+    def paired = { Map extra, String base ->
+        tumor([control: "${base}/testdata/SEQC2_LL1_C_small.bam".toString(),
+               control_index: "${base}/testdata/SEQC2_LL1_C_small.bam.bai".toString()] + extra, base)
+    }
+
+    // ---------- valid input ----------
+
+    test("tumor/control pair passes validation") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'paired', [paired([:], baseDir)]); outdir = "$outputDir" } }
+        then { assert workflow.success }
+    }
+
+    test("tumor-only sample passes validation") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'tumor_only', [tumor([:], baseDir)]); outdir = "$outputDir" } }
+        then { assert workflow.success }
+    }
+
+    test("empty sex passes validation (sex is estimated)") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'no_sex', [paired(baseDir, sex: '')]); outdir = "$outputDir" } }
+        then { assert workflow.success }
+    }
+
+    test("all allowed sex values pass validation") {
+        options "-preview"
+        when { params {
+            input = sheet(outputDir, 'sexes', [paired(baseDir, sample: 's1', sex: 'male'), paired(baseDir, sample: 's2', sex: 'female'), paired(baseDir, sample: 's3', sex: 'klinefelter')])
+            outdir = "$outputDir"
+        } }
+        then { assert workflow.success }
+    }
+
+    // ---------- invalid samplesheets ----------
+
+    test("duplicate sample names fail") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'duplicate', [paired([:], baseDir), paired([:], baseDir)]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains('Detected duplicate entries') }
+        }
+    }
+
+    test("unknown sex fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'bad_sex', [paired(baseDir, sex: 'unknown')]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains("Error for field 'sex'") }
+        }
+    }
+
+    test("sample name with a space fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'space', [paired(baseDir, sample: 'my sample')]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains("Error for field 'sample'") }
+        }
+    }
+
+    test("unknown tumorsample fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'bad_tumorsample', [paired(baseDir, tumorsample: 'primary')]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains("Error for field 'tumorsample'") }
+        }
+    }
+
+    test("alignment file with wrong extension fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'bad_extension', [paired(baseDir, tumor: "${baseDir}/README.md".toString())]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains("Error for field 'tumor'") }
+        }
+    }
+
+    test("missing alignment file fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'missing_file', [paired(baseDir, tumor: "${baseDir}/testdata/does_not_exist.bam".toString())]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains('does not exist') }
+        }
+    }
+
+    test("missing tumor index fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'no_index', [paired(baseDir, tumor_index: '')]); outdir = "$outputDir" } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains('Missing required field(s): tumor_index') }
+        }
+    }
+
+    // ---------- invalid parameters ----------
+
+    test("text for an integer parameter fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'paired', [paired([:], baseDir)]); outdir = "$outputDir"; min_seg_length_prune = 'abc' } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains('--min_seg_length_prune') }
+        }
+    }
+
+    test("text for a boolean parameter fails") {
+        options "-preview"
+        when { params { input = sheet(outputDir, 'paired', [paired([:], baseDir)]); outdir = "$outputDir"; legacyMode = 'maybe' } }
+        then {
+            assert workflow.failed
+            assert (workflow.stdout + workflow.stderr).any { it.contains('--legacyMode') }
+        }
+    }
+}

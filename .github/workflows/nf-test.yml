@@ -1,0 +1,43 @@
+name: nf-test
+# Runs the input and parameter validation tests (tests/validation.nf.test).
+# They use `-preview`, so no containers or test data downloads are needed.
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    name: Validation tests
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: "23.10.0"
+      NXF_ANSI_LOG: false
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Nextflow
+        run: |
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+
+      - name: Install nf-test
+        run: |
+          wget -qO- https://get.nf-test.com | bash -s 0.9.2
+          sudo mv nf-test /usr/local/bin/
+
+      - name: Run validation tests
+        run: nf-test test --tag validation --verbose
