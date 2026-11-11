@@ -9,6 +9,8 @@ Initial release of nf-core/aceseq, created with the [nf-core](https://nf-co.re/)
 
 ### `Added`
 
+- nf-prov plugin: BioCompute Object provenance report in `pipeline_info/` [#31](https://github.com/ghga-de/nf-aceseq/issues/31)
+
 ### `Fixed`
 
 ### `Dependencies`
