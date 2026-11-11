@@ -225,3 +225,13 @@ We recommend adding the following line to your environment to limit this (typica
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
+
+## Running the validation tests
+
+The samplesheet and parameter validation is covered by [nf-test](https://www.nf-test.com/) tests in `tests/validation.nf.test`. They run the pipeline with `-preview` against small placeholder references in `tests/data/`, so no containers or test data downloads are needed:
+
+```bash
+nf-test test --tag validation
+```
+
+The same tests run on GitHub Actions for every pull request (`.github/workflows/nf-test.yml`).
