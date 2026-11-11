@@ -252,8 +252,7 @@ workflow ACESEQ {
             blacklist,
             SNV_CALLING.out.ch_sex,
             centromers,
-            cytobands,
-            chrprefix
+            cytobands
         )
     }
     else{
