@@ -13,6 +13,8 @@ Initial release of nf-core/aceseq, created with the [nf-core](https://nf-co.re/)
 
 ### `Fixed`
 
+- Purity/ploidy plots (`*_tcn_distances_combined_star.png` etc.) are now published to `plots/`; `*_most_important_info*.txt` files moved to `results/` [#27](https://github.com/ghga-de/nf-aceseq/issues/27)
+
 ### `Dependencies`
 
 ### `Deprecated`

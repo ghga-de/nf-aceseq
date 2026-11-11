@@ -72,6 +72,12 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <summary>Output files</summary>
 
 - `metaid/`
+  - `*_ploidy_purity_2D.txt`: distances for all tested purity/ploidy combinations
+- `metaid/plots/`
+  - `*_tcn_distances_combined.png`, `*_tcn_distances_combined_star.png`, `*_tcn_NON_ABERRANT_n_more.png`: purity/ploidy evaluation plots (the star marks the selected solutions)
+  - copy number plots and parameter files for each purity/ploidy solution
+- `metaid/results/`
+  - `*_most_important_info*.txt`: final purity, ploidy, sex and copy number segments for each solution (main result files)
 
 </details>
 

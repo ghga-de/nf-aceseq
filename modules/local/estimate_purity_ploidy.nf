@@ -11,6 +11,7 @@ process ESTIMATE_PURITY_PLOIDY {
 
     output:
     tuple val(meta), path('*_ploidy_purity_2D.txt')    , emit: purity_ploidy   
+    tuple val(meta), path('*.png')                     , emit: plots, optional: true
     path  "versions.yml"                               , emit: versions
 
     when:
