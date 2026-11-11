@@ -5,6 +5,9 @@
 
 use strict;
 use warnings;
+
+# Issue #43: a write error on STDOUT (e.g. disk full) is only reported when STDOUT is closed
+END { CORE::close(STDOUT) or do { print STDERR "Error writing to STDOUT: $!\n"; $? ||= 1 } }
 use v5.10;
 use List::Util;
 
@@ -49,6 +52,8 @@ while (<SV>){
   $bp{"$svs->{chr}".":"."$svs->{start}"}=$svs;
   $bp{"$svs->{chr}".":"."$svs->{end}"}=$svs;
 }
+# Issue #43: a read error ends the loop like EOF; only close() reports it
+close(SV) or die "Error reading $sv: $!\n";
 
 #$header = <IN>;
 $header = <STDIN>;
@@ -97,5 +102,7 @@ while (<STDIN>) {
     say join "\t", $fields{chromosome}, $fields{start}, $fields{end}, $fields{sv}, $fields{length}, $fields{tcnNbrOfLoci}, $fields{tcnMean}, $fields{tcnNbrOfSNPs}, $fields{tcnNbrOfHets}, $fields{dhNbrOfLoci}, "mappable";
   }
 }
+# Issue #43: a read error ends the loop like EOF; only close() reports it
+close(STDIN) or die "Error reading input: $!\n";
 #close OUT or die "could not close $outfile: $!\n";
 #system("tabix -s 1 -b 2 -e 3 $outfile") && die "could not tabix $outfile: $!\n";

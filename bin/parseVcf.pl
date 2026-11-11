@@ -5,6 +5,9 @@
 use strict;
 use warnings;
 
+# Issue #43: a write error on STDOUT (e.g. disk full) is only reported when STDOUT is closed
+END { CORE::close(STDOUT) or do { print STDERR "Error writing to STDOUT: $!\n"; $? ||= 1 } }
+
 my %filehandle; my $filename; my $filenametmp; my $chr_prefix;
 
 for (my $i=1; $i < 25; $i++){
@@ -30,13 +33,16 @@ while (my $line = <STDIN> ){
 	}
 }
 
+# Issue #43: a read error ends the loop like EOF; only close() reports it
+close(STDIN) or die "Error reading input: $!\n";
+
 for (my $i=1; $i < 25; $i++){
 	my $id = $i;
 	$id =~ s/23/X/;
 	$id =~ s/24/Y/;
 	$filename = "$ARGV[0]/$ARGV[1]$id.$ARGV[2]";
 	$filenametmp = "$ARGV[0]/$ARGV[1]$id.$ARGV[2].tmp";
-	close( $filehandle{$id});
+	close( $filehandle{$id}) or die "Error writing $filenametmp: $!\n";  # issue #43
 	my $move=system("mv $filenametmp $filename 2>&1");
 	die "Could not move $filenametmp!\n" if $move != 0;
 }
